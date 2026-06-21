@@ -6,6 +6,7 @@ interface DroppableScheduleDayProps {
   dateKey: string
   items: ScheduleDisplayItemModel[]
   isBusy: boolean
+  isDropActive: boolean
   onDelete: (id: string) => void
 }
 
@@ -13,6 +14,7 @@ export function DroppableScheduleDay({
   dateKey,
   items,
   isBusy,
+  isDropActive,
   onDelete,
 }: DroppableScheduleDayProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -27,14 +29,18 @@ export function DroppableScheduleDay({
   return (
     <section
       ref={setNodeRef}
-      className={`droppable-schedule-day${isOver ? ' is-over' : ''}`}
+      className={`droppable-schedule-day${
+        isDropActive ? ' can-drop' : ''
+      }${isOver ? ' is-over' : ''}`}
       aria-label={`${dateKey} 拖曳排程區`}
     >
       <h3>
         <time dateTime={dateKey}>{dateKey}</time>
       </h3>
       {items.length === 0 ? (
-        <p className="empty-schedule-day">拖曳任務到這一天</p>
+        <p className="empty-schedule-day">
+          尚無排程，可拖曳任務到這裡
+        </p>
       ) : (
         <ul className="schedule-block-list">
           {items.map((item) => (

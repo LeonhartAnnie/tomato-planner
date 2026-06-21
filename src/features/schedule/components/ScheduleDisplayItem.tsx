@@ -71,8 +71,8 @@ export function ScheduleDisplayItem({
           </div>
         </dl>
       </div>
-      <span className="readonly-badge" aria-label="唯讀行程">
-        Readonly
+      <span className="readonly-badge" aria-label="外部行程，唯讀">
+        外部行程，唯讀
       </span>
     </li>
   )

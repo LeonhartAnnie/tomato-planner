@@ -35,9 +35,11 @@ export function DraggableTaskCard({
       style={style}
       {...listeners}
       {...attributes}
+      aria-label={`拖曳任務「${task.title}」到日期排程`}
     >
       <strong>{task.title}</strong>
       <span>預估 {task.estimatedMinutes} 分鐘</span>
+      <span className="drag-item-hint">拖曳到日期排程</span>
     </button>
   )
 }

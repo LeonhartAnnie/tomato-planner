@@ -111,19 +111,25 @@ h1 { margin-top: 0; }
 .draggable-task-list { display: grid; gap: 9px; }
 .draggable-task-card { display: grid; gap: 4px; width: 100%; padding: 12px; border: 1px solid #c24132; border-radius: 9px; color: #2c2522; background: white; font: inherit; text-align: left; touch-action: none; cursor: grab; }
 .draggable-task-card span { color: #78665f; font-size: 0.85rem; }
+.draggable-task-card .drag-item-hint, .draggable-scheduled-block .drag-item-hint { color: #a5372c; font-size: 0.78rem; font-weight: 600; }
 .draggable-task-card:disabled { cursor: not-allowed; opacity: 0.55; }
-.draggable-task-card.is-dragging { z-index: 10; opacity: 0.7; cursor: grabbing; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
+.draggable-task-card.is-dragging { z-index: 10; opacity: 0.78; cursor: grabbing; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
 .draggable-scheduled-block { display: grid; gap: 2px; width: 100%; margin-bottom: 10px; padding: 7px 9px; border: 1px dashed #8a6a5e !important; border-radius: 7px; color: #5d4d47 !important; background: #fff8f2 !important; font: inherit; font-size: 0.8rem; text-align: left; touch-action: none; cursor: grab !important; }
 .draggable-scheduled-block small { color: #78665f; }
 .draggable-scheduled-block:disabled { cursor: not-allowed !important; opacity: 0.55; }
-.draggable-scheduled-block.is-dragging { z-index: 10; opacity: 0.7; cursor: grabbing !important; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
+.draggable-scheduled-block.is-dragging { z-index: 10; opacity: 0.78; cursor: grabbing !important; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
 .droppable-day-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 .droppable-schedule-day { min-height: 130px; padding: 12px; border: 2px dashed #d4b8ad; border-radius: 10px; background: #fffdfb; transition: border-color 120ms ease, background-color 120ms ease; }
-.droppable-schedule-day.is-over { border-color: #3868ad; background: #eef5ff; }
+.droppable-schedule-day.can-drop { border-color: #86a9d8; background: #f7faff; }
+.droppable-schedule-day.is-over { border-color: #285b9f; background: #e7f1ff; box-shadow: 0 0 0 3px rgb(56 104 173 / 14%); }
+.droppable-schedule-day.is-over::after { display: block; margin-top: 10px; color: #285b9f; content: '放到這一天'; font-size: 0.82rem; font-weight: 700; text-align: center; }
 .droppable-schedule-day > h3 { margin: 0 0 10px; font-size: 0.95rem; }
 .droppable-schedule-day .schedule-block-item { padding: 12px; }
 .pending-drop-form { display: grid; gap: 14px; max-width: 520px; margin-top: 20px; padding: 18px; border: 1px solid #d6c8c2; border-radius: 12px; background: #fff8f2; }
 .pending-drop-form h3 { margin: 0; }
+.pending-drop-summary { margin: 0; color: #645d59; }
+.pending-drop-summary p { margin: 3px 0; }
+.pending-drop-error { margin: 0; padding: 10px 12px; border-left: 3px solid #b94b3f; border-radius: 6px; color: #8c231c; background: #fff1ef; }
 .pending-drop-form label { display: grid; gap: 6px; }
 .pending-drop-form input { max-width: 180px; padding: 9px; border: 1px solid #cdbbb4; border-radius: 8px; font: inherit; }
 .pending-drop-actions { display: flex; flex-wrap: wrap; gap: 8px; }

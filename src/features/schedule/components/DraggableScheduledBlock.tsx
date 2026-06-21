@@ -38,9 +38,11 @@ export function DraggableScheduledBlock({
       style={style}
       {...listeners}
       {...attributes}
+      aria-label={`拖曳排程「${block.title}」重新排程`}
     >
-      <span>拖曳重新排程：{block.title}</span>
+      <strong>{block.title}</strong>
       <small>{formatScheduleTimeRange(block.start, block.end)}</small>
+      <span className="drag-item-hint">拖曳重新排程</span>
     </button>
   )
 }

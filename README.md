@@ -199,6 +199,18 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 - [ ] activeTimer 不會寫入備份。
 - [ ] 上傳並還原備份後，重新排程的 ScheduledBlock 日期與時間仍存在。
 
+### v2.3 Schedule UI polish
+
+- [ ] 拖曳 Task 時，所有日期 drop area 顯示可放置狀態，hover 日期明顯高亮。
+- [ ] 拖曳 ScheduledBlock 時，日期 drop area 同樣顯示提示與高亮。
+- [ ] CalendarEvent 顯示「外部行程，唯讀」，且不可拖曳。
+- [ ] Pending create 顯示任務名稱、日期、預估時間與開始時間欄位。
+- [ ] Pending reschedule 顯示排程名稱、原本時間、保留 duration 與新開始時間欄位。
+- [ ] 衝突錯誤在 pending panel 內清楚顯示。
+- [ ] 無可拖曳 Task 與空日期的提示文案正常。
+- [ ] Task drag create 與 ScheduledBlock drag reschedule 仍可完成。
+- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
+
 ### Build
 
 - [ ] `npm run test:run` 全部通過。
