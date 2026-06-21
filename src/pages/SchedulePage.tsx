@@ -22,6 +22,7 @@ export function SchedulePage() {
   const scheduleError = useScheduleStore((state) => state.error)
   const loadSchedule = useScheduleStore((state) => state.loadSchedule)
   const addBlock = useScheduleStore((state) => state.addBlock)
+  const updateBlock = useScheduleStore((state) => state.updateBlock)
   const deleteBlock = useScheduleStore((state) => state.deleteBlock)
   const setCalendarEvents = useScheduleStore(
     (state) => state.setCalendarEvents,
@@ -79,6 +80,7 @@ export function SchedulePage() {
         isBusy={isLoading}
         error={scheduleError}
         onAdd={handleAdd}
+        onUpdate={updateBlock}
         onDelete={(id) => void deleteBlock(id)}
       />
 

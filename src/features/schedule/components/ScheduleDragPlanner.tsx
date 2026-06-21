@@ -3,7 +3,10 @@ import { useMemo, useState, type FormEvent } from 'react'
 import type { CreateScheduledBlockInput } from '../../../application/schedule/createScheduledBlock'
 import type { CalendarEvent, ScheduledBlock, Task } from '../../../types'
 import { toErrorMessage } from '../../../utils/error'
-import { createDroppedTaskTimeRange } from '../selectors/dragScheduleHelpers'
+import {
+  createDroppedTaskTimeRange,
+  createRescheduledBlockTimeRange,
+} from '../selectors/dragScheduleHelpers'
 import {
   getNextSevenDays,
   groupScheduleItemsByDate,
@@ -19,13 +22,17 @@ interface ScheduleDragPlannerProps {
   isBusy: boolean
   error?: string | null
   onAdd: (input: CreateScheduledBlockInput) => Promise<boolean>
+  onUpdate: (block: ScheduledBlock) => Promise<boolean>
   onDelete: (id: string) => void
 }
 
-interface PendingDrop {
-  task: Task
-  dateKey: string
-}
+type PendingDrop =
+  | { type: 'create'; task: Task; targetDateKey: string }
+  | {
+      type: 'reschedule'
+      block: ScheduledBlock
+      targetDateKey: string
+    }
 
 export function ScheduleDragPlanner({
   tasks,
@@ -35,6 +42,7 @@ export function ScheduleDragPlanner({
   isBusy,
   error,
   onAdd,
+  onUpdate,
   onDelete,
 }: ScheduleDragPlannerProps) {
   const [pendingDrop, setPendingDrop] = useState<PendingDrop>()
@@ -55,21 +63,42 @@ export function ScheduleDragPlanner({
     const activeData = active.data.current
     const overData = over?.data.current
     if (
-      activeData?.type !== 'task' ||
-      typeof activeData.taskId !== 'string' ||
       overData?.type !== 'schedule-day' ||
       typeof overData.dateKey !== 'string'
     ) {
       return
     }
 
-    const task = tasks.find((item) => item.id === activeData.taskId)
-    if (!task) {
+    if (
+      activeData?.type === 'task' &&
+      typeof activeData.taskId === 'string'
+    ) {
+      const task = tasks.find((item) => item.id === activeData.taskId)
+      if (task) {
+        setPendingDrop({
+          type: 'create',
+          task,
+          targetDateKey: overData.dateKey,
+        })
+        setFormError(undefined)
+      }
       return
     }
 
-    setPendingDrop({ task, dateKey: overData.dateKey })
-    setFormError(undefined)
+    if (
+      activeData?.type === 'scheduled-block' &&
+      typeof activeData.blockId === 'string'
+    ) {
+      const block = blocks.find((item) => item.id === activeData.blockId)
+      if (block) {
+        setPendingDrop({
+          type: 'reschedule',
+          block,
+          targetDateKey: overData.dateKey,
+        })
+        setFormError(undefined)
+      }
+    }
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -79,20 +108,34 @@ export function ScheduleDragPlanner({
     }
 
     try {
-      const { start, end } = createDroppedTaskTimeRange(
-        pendingDrop.dateKey,
-        startTime,
-        pendingDrop.task,
-        defaultDurationMinutes,
-      )
-      const succeeded = await onAdd({
-        taskId: pendingDrop.task.id,
-        title: pendingDrop.task.title,
-        start,
-        end,
-        source: 'manual',
-        syncedToGoogleCalendar: false,
-      })
+      let succeeded: boolean
+      if (pendingDrop.type === 'create') {
+        const { start, end } = createDroppedTaskTimeRange(
+          pendingDrop.targetDateKey,
+          startTime,
+          pendingDrop.task,
+          defaultDurationMinutes,
+        )
+        succeeded = await onAdd({
+          taskId: pendingDrop.task.id,
+          title: pendingDrop.task.title,
+          start,
+          end,
+          source: 'manual',
+          syncedToGoogleCalendar: false,
+        })
+      } else {
+        const { start, end } = createRescheduledBlockTimeRange(
+          pendingDrop.block,
+          pendingDrop.targetDateKey,
+          startTime,
+        )
+        succeeded = await onUpdate({
+          ...pendingDrop.block,
+          start,
+          end,
+        })
+      }
 
       if (succeeded) {
         setPendingDrop(undefined)
@@ -114,7 +157,7 @@ export function ScheduleDragPlanner({
     <section className="drag-planner" aria-labelledby="drag-planner-title">
       <h2 id="drag-planner-title">拖曳排程</h2>
       <p className="drag-planner-help">
-        將未排程任務拖到日期，再輸入開始時間確認排程。
+        將未排程任務拖到日期建立排程，或拖曳既有排程重新安排日期。
       </p>
 
       <DndContext onDragEnd={handleDragEnd}>
@@ -156,7 +199,9 @@ export function ScheduleDragPlanner({
           onSubmit={(event) => void handleSubmit(event)}
         >
           <h3>
-            將 {pendingDrop.task.title} 排到 {pendingDrop.dateKey}
+            {pendingDrop.type === 'create'
+              ? `將 ${pendingDrop.task.title} 排到 ${pendingDrop.targetDateKey}`
+              : `將 ${pendingDrop.block.title} 重新排到 ${pendingDrop.targetDateKey}`}
           </h3>
           <label>
             開始時間
@@ -172,7 +217,7 @@ export function ScheduleDragPlanner({
           )}
           <div className="pending-drop-actions">
             <button type="submit" disabled={isBusy}>
-              確認排程
+              {pendingDrop.type === 'create' ? '確認排程' : '確認重新排程'}
             </button>
             <button
               type="button"

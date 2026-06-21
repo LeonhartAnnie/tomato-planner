@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ScheduledBlock } from '../../types'
+import type { CalendarEvent, ScheduledBlock } from '../../types'
 import type { ScheduleRepository } from './scheduleRepository'
 import { updateScheduledBlock } from './updateScheduledBlock'
 
@@ -22,6 +22,22 @@ const block: ScheduledBlock = {
   syncedToGoogleCalendar: false,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+}
+
+const otherBlock: ScheduledBlock = {
+  ...block,
+  id: 'block-2',
+  start: '2026-06-21T04:00:00.000Z',
+  end: '2026-06-21T05:00:00.000Z',
+}
+
+const calendarEvent: CalendarEvent = {
+  id: 'event-1',
+  title: '外部會議',
+  start: '2026-06-21T06:00:00.000Z',
+  end: '2026-06-21T07:00:00.000Z',
+  source: 'google_calendar',
+  readonly: true,
 }
 
 afterEach(() => {
@@ -52,5 +68,35 @@ describe('updateScheduledBlock', () => {
 
     expect(repository.updateScheduledBlock).toHaveBeenCalledWith(updated)
     expect(updated.id).toBe(block.id)
+  })
+
+  it('does not treat the block being updated as its own conflict', async () => {
+    await expect(
+      updateScheduledBlock(block, repository, [block], []),
+    ).resolves.toMatchObject({ id: block.id })
+  })
+
+  it('rejects a conflict with another scheduled block', async () => {
+    await expect(
+      updateScheduledBlock(
+        { ...block, start: otherBlock.start, end: otherBlock.end },
+        repository,
+        [block, otherBlock],
+        [],
+      ),
+    ).rejects.toThrow('Scheduled block conflicts with an existing event')
+    expect(repository.updateScheduledBlock).not.toHaveBeenCalled()
+  })
+
+  it('rejects a conflict with a calendar event', async () => {
+    await expect(
+      updateScheduledBlock(
+        { ...block, start: calendarEvent.start, end: calendarEvent.end },
+        repository,
+        [block],
+        [calendarEvent],
+      ),
+    ).rejects.toThrow('Scheduled block conflicts with an existing event')
+    expect(repository.updateScheduledBlock).not.toHaveBeenCalled()
   })
 })

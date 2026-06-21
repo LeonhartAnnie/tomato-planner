@@ -1,5 +1,5 @@
 import { addMinutes, format, isValid, parse } from 'date-fns'
-import type { Task } from '../../../types'
+import type { ScheduledBlock, Task } from '../../../types'
 
 const DATE_TIME_LOCAL_FORMAT = "yyyy-MM-dd'T'HH:mm"
 const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/
@@ -54,6 +54,35 @@ export const createDroppedTaskTimeRange = (
     task,
     defaultDurationMinutes,
   )
+
+  return {
+    start,
+    end: addMinutes(new Date(start), durationMinutes).toISOString(),
+    durationMinutes,
+  }
+}
+
+export const getScheduledBlockDurationMinutes = (
+  block: ScheduledBlock,
+): number => {
+  const startTime = new Date(block.start).getTime()
+  const endTime = new Date(block.end).getTime()
+  const durationMinutes = (endTime - startTime) / 60_000
+
+  if (!isPositiveFiniteNumber(durationMinutes)) {
+    throw new Error('Invalid scheduled block duration')
+  }
+
+  return durationMinutes
+}
+
+export const createRescheduledBlockTimeRange = (
+  block: ScheduledBlock,
+  dateKey: string,
+  time: string,
+): DroppedTaskTimeRange => {
+  const start = toScheduleStartIso(dateKey, time)
+  const durationMinutes = getScheduledBlockDurationMinutes(block)
 
   return {
     start,

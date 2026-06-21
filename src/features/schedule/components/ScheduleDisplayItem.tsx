@@ -1,11 +1,13 @@
 import type { ScheduleDisplayItem as ScheduleDisplayItemModel } from '../selectors/scheduleDisplaySelectors'
 import { formatScheduleTimeRange } from '../selectors/scheduleDisplaySelectors'
 import { ScheduleBlockListItem } from './ScheduleBlockListItem'
+import { DraggableScheduledBlock } from './DraggableScheduledBlock'
 
 interface ScheduleDisplayItemProps {
   item: ScheduleDisplayItemModel
   isBusy: boolean
   onDelete: (id: string) => void
+  isDraggable?: boolean
 }
 
 function ConflictNotice({ item }: { item: ScheduleDisplayItemModel }) {
@@ -30,6 +32,7 @@ export function ScheduleDisplayItem({
   item,
   isBusy,
   onDelete,
+  isDraggable = false,
 }: ScheduleDisplayItemProps) {
   if (item.kind === 'scheduled_block') {
     return (
@@ -39,6 +42,11 @@ export function ScheduleDisplayItem({
         onDelete={onDelete}
         isConflicting={item.hasConflict}
         conflictNotice={<ConflictNotice item={item} />}
+        dragHandle={
+          isDraggable ? (
+            <DraggableScheduledBlock block={item.block} disabled={isBusy} />
+          ) : undefined
+        }
       />
     )
   }

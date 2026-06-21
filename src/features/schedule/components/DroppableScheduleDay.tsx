@@ -43,6 +43,7 @@ export function DroppableScheduleDay({
               item={item}
               isBusy={isBusy}
               onDelete={onDelete}
+              isDraggable
             />
           ))}
         </ul>

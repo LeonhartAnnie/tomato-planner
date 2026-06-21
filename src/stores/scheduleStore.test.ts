@@ -135,6 +135,26 @@ describe('scheduleStore', () => {
     })
   })
 
+  it('does not update a block when its new time conflicts', async () => {
+    const otherBlock = {
+      ...block,
+      id: 'block-2',
+      start: '2026-06-21T05:00:00.000Z',
+      end: '2026-06-21T06:00:00.000Z',
+    }
+    useScheduleStore.setState({ blocks: [block, otherBlock] })
+
+    const succeeded = await useScheduleStore.getState().updateBlock({
+      ...block,
+      start: otherBlock.start,
+      end: otherBlock.end,
+    })
+
+    expect(succeeded).toBe(false)
+    expect(scheduleDexieRepository.updateScheduledBlock).not.toHaveBeenCalled()
+    expect(useScheduleStore.getState().error).toBeTruthy()
+  })
+
   it('deletes a block', async () => {
     useScheduleStore.setState({ blocks: [block] })
 

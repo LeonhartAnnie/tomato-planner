@@ -11,6 +11,7 @@ interface ScheduleBlockListItemProps {
   onDelete: (id: string) => void
   isConflicting?: boolean
   conflictNotice?: ReactNode
+  dragHandle?: ReactNode
 }
 
 export function ScheduleBlockListItem({
@@ -19,6 +20,7 @@ export function ScheduleBlockListItem({
   onDelete,
   isConflicting = false,
   conflictNotice,
+  dragHandle,
 }: ScheduleBlockListItemProps) {
   const navigate = useNavigate()
   const workMinutes = useSettingsStore((state) => state.settings.workMinutes)
@@ -39,6 +41,7 @@ export function ScheduleBlockListItem({
       }`}
     >
       <div>
+        {dragHandle}
         <h3>{block.title}</h3>
         {conflictNotice}
         <dl className="schedule-block-details">

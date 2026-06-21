@@ -113,6 +113,10 @@ h1 { margin-top: 0; }
 .draggable-task-card span { color: #78665f; font-size: 0.85rem; }
 .draggable-task-card:disabled { cursor: not-allowed; opacity: 0.55; }
 .draggable-task-card.is-dragging { z-index: 10; opacity: 0.7; cursor: grabbing; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
+.draggable-scheduled-block { display: grid; gap: 2px; width: 100%; margin-bottom: 10px; padding: 7px 9px; border: 1px dashed #8a6a5e !important; border-radius: 7px; color: #5d4d47 !important; background: #fff8f2 !important; font: inherit; font-size: 0.8rem; text-align: left; touch-action: none; cursor: grab !important; }
+.draggable-scheduled-block small { color: #78665f; }
+.draggable-scheduled-block:disabled { cursor: not-allowed !important; opacity: 0.55; }
+.draggable-scheduled-block.is-dragging { z-index: 10; opacity: 0.7; cursor: grabbing !important; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
 .droppable-day-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 .droppable-schedule-day { min-height: 130px; padding: 12px; border: 2px dashed #d4b8ad; border-radius: 10px; background: #fffdfb; transition: border-color 120ms ease, background-color 120ms ease; }
 .droppable-schedule-day.is-over { border-color: #3868ad; background: #eef5ff; }

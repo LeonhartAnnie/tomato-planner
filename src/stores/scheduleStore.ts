@@ -86,6 +86,8 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       const updatedBlock = await updateScheduledBlock(
         block,
         scheduleDexieRepository,
+        get().blocks,
+        get().calendarEvents,
       )
       set((state) => ({
         blocks: state.blocks.map((item) =>

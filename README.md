@@ -158,6 +158,13 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 ### Schedule
 
 - [ ] 選擇任務並建立手動排程。
+- [ ] 將未排程 Task 拖到日期並輸入開始時間，確認可建立排程。
+- [ ] 將既有 ScheduledBlock 拖到另一日，輸入新時間後確認更新成功。
+- [ ] 取消 pending reschedule 後，原排程日期與時間不變。
+- [ ] 重新排程若與其他 ScheduledBlock 衝突，會被阻擋並顯示錯誤。
+- [ ] 重新排程若與 CalendarEvent 衝突，會依既有規則被阻擋。
+- [ ] CalendarEvent 維持 readonly 且不可拖曳。
+- [ ] 重新排程後仍可從 ScheduledBlock 執行 Start Focus。
 - [ ] 衝突排程會被阻擋，或在既有顯示項目上標記時間衝突。
 - [ ] 刪除排程。
 - [ ] 未來 7 天視圖日期、排序及空日期正常顯示。
@@ -190,6 +197,7 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 - [ ] 雲端沒有備份時顯示可讀錯誤。
 - [ ] CalendarEvent 不會寫入備份。
 - [ ] activeTimer 不會寫入備份。
+- [ ] 上傳並還原備份後，重新排程的 ScheduledBlock 日期與時間仍存在。
 
 ### Build
 
