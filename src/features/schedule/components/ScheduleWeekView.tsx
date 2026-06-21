@@ -23,7 +23,7 @@ export function ScheduleWeekView({
 
   return (
     <section className="schedule-week" aria-label="未來七天排程">
-      <h2>未來 7 天</h2>
+      <h2>週排程清單</h2>
       <div className="schedule-days">
         {dayGroups.map((group) => (
           <section className="schedule-day" key={group.dateKey}>

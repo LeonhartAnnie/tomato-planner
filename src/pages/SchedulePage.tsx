@@ -5,6 +5,7 @@ import { ScheduleBlockForm } from '../features/schedule/components/ScheduleBlock
 import { GoogleCalendarPanel } from '../features/schedule/components/GoogleCalendarPanel'
 import { ScheduleDragPlanner } from '../features/schedule/components/ScheduleDragPlanner'
 import { ScheduleWeekView } from '../features/schedule/components/ScheduleWeekView'
+import { TimeGridScheduleView } from '../features/schedule/components/TimeGridScheduleView'
 import { createSampleCalendarEvents } from '../features/schedule/sampleCalendarEvents'
 import { useScheduleStore } from '../stores/scheduleStore'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -56,46 +57,76 @@ export function SchedulePage() {
           尚無可排程任務，請先前往 <Link to="/tasks">任務頁面</Link> 建立任務。
         </p>
       )}
-      <GoogleCalendarPanel />
-      {import.meta.env.DEV && (
-        <div className="development-calendar-actions">
-          <button
-            type="button"
-            className="sample-events-button"
-            disabled={scheduleLoading}
-            onClick={() =>
-              void setCalendarEvents(createSampleCalendarEvents(blocks[0]))
-            }
-          >
-            開發測試：載入範例外部行程
-          </button>
-        </div>
-      )}
-
-      <ScheduleDragPlanner
-        tasks={tasks}
+      <TimeGridScheduleView
         blocks={blocks}
         calendarEvents={calendarEvents}
-        defaultDurationMinutes={settings.defaultTaskDurationMinutes}
-        isBusy={isLoading}
-        error={scheduleError}
-        onAdd={handleAdd}
-        onUpdate={updateBlock}
-        onDelete={(id) => void deleteBlock(id)}
+        calendarViewStartHour={settings.calendarViewStartHour}
+        calendarViewEndHour={settings.calendarViewEndHour}
       />
 
-      <div className="schedule-layout">
-        <ScheduleBlockForm
-          tasks={tasks}
-          isSubmitting={isLoading}
-          onSubmit={handleAdd}
-        />
-        <ScheduleWeekView
-          blocks={blocks}
-          calendarEvents={calendarEvents}
-          isBusy={isLoading}
-          onDelete={(id) => void deleteBlock(id)}
-        />
+      <details className="schedule-section" open>
+        <summary>拖曳排程</summary>
+        <div className="schedule-section-content">
+          <ScheduleDragPlanner
+            tasks={tasks}
+            blocks={blocks}
+            calendarEvents={calendarEvents}
+            defaultDurationMinutes={settings.defaultTaskDurationMinutes}
+            isBusy={isLoading}
+            error={scheduleError}
+            onAdd={handleAdd}
+            onUpdate={updateBlock}
+            onDelete={(id) => void deleteBlock(id)}
+          />
+        </div>
+      </details>
+
+      <div className="schedule-secondary-sections">
+        <details className="schedule-section">
+          <summary>手動建立排程</summary>
+          <div className="schedule-section-content">
+            <ScheduleBlockForm
+              tasks={tasks}
+              isSubmitting={isLoading}
+              onSubmit={handleAdd}
+            />
+          </div>
+        </details>
+
+        <details className="schedule-section">
+          <summary>週排程清單</summary>
+          <div className="schedule-section-content">
+            <ScheduleWeekView
+              blocks={blocks}
+              calendarEvents={calendarEvents}
+              isBusy={isLoading}
+              onDelete={(id) => void deleteBlock(id)}
+            />
+          </div>
+        </details>
+
+        <details className="schedule-section">
+          <summary>Google Calendar</summary>
+          <div className="schedule-section-content">
+            <GoogleCalendarPanel />
+            {import.meta.env.DEV && (
+              <div className="development-calendar-actions">
+                <button
+                  type="button"
+                  className="sample-events-button"
+                  disabled={scheduleLoading}
+                  onClick={() =>
+                    void setCalendarEvents(
+                      createSampleCalendarEvents(blocks[0]),
+                    )
+                  }
+                >
+                  開發測試：載入範例外部行程
+                </button>
+              </div>
+            )}
+          </div>
+        </details>
       </div>
     </section>
   )

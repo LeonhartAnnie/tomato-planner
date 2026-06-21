@@ -89,29 +89,7 @@ export const groupScheduleItemsByDate = (
 ): ScheduleDayDisplayGroup[] => {
   const allowedDates = new Set(dateKeys)
   const itemsByDate = new Map<string, ScheduleDisplayItem[]>()
-  const displayItems: ScheduleDisplayItem[] = [
-    ...blocks.map((block) => ({
-      kind: 'scheduled_block' as const,
-      id: block.id,
-      title: block.title,
-      start: block.start,
-      end: block.end,
-      block,
-      hasConflict: false,
-      conflicts: [],
-    })),
-    ...calendarEvents.map((event) => ({
-      kind: 'calendar_event' as const,
-      id: event.id,
-      title: event.title,
-      start: event.start,
-      end: event.end,
-      event,
-      readonly: true as const,
-      hasConflict: false,
-      conflicts: [],
-    })),
-  ]
+  const displayItems = createScheduleDisplayItems(blocks, calendarEvents)
 
   for (const item of displayItems) {
     const dateKey = toDateKey(item.start)
@@ -141,6 +119,33 @@ export const groupScheduleItemsByDate = (
     ),
   }))
 }
+
+export const createScheduleDisplayItems = (
+  blocks: ScheduledBlock[],
+  calendarEvents: CalendarEvent[],
+): ScheduleDisplayItem[] => [
+    ...blocks.map((block) => ({
+      kind: 'scheduled_block' as const,
+      id: block.id,
+      title: block.title,
+      start: block.start,
+      end: block.end,
+      block,
+      hasConflict: false,
+      conflicts: [],
+    })),
+    ...calendarEvents.map((event) => ({
+      kind: 'calendar_event' as const,
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      event,
+      readonly: true as const,
+      hasConflict: false,
+      conflicts: [],
+    })),
+  ]
 
 const toConflictSummary = (
   item: ScheduleDisplayItem,

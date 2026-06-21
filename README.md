@@ -211,6 +211,27 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 - [ ] Task drag create 與 ScheduledBlock drag reschedule 仍可完成。
 - [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
 
+### v2.4 Schedule time grid view
+
+- [ ] 時間格線視圖顯示未來 7 天及 Settings 設定的起訖時間。
+- [ ] ScheduledBlock 依開始與結束時間落在正確位置。
+- [ ] CalendarEvent 依時間顯示，並保有「外部行程，唯讀」標籤。
+- [ ] 部分或完全超出顯示範圍的事件不會造成版面破損。
+- [ ] 小螢幕可水平捲動時間格線。
+- [ ] Task drag create 與 ScheduledBlock drag reschedule 仍正常。
+- [ ] 既有週排程清單的 Start Focus 仍正常。
+- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
+
+### v2.4.1 Time grid and Schedule layout fixes
+
+- [ ] 小螢幕可水平及垂直捲動時間格線，並能到達設定的 endHour。
+- [ ] `calendarViewEndHour = 24` 時可看到 24:00 最後一列。
+- [ ] 跨天 ScheduledBlock 會切割顯示在對應的多個日期欄位。
+- [ ] 跨天 CalendarEvent 同樣切割顯示，且維持「外部行程，唯讀」。
+- [ ] 拖曳排程、手動排程、週清單、時間格線及 Google Calendar 區塊皆可使用。
+- [ ] Task drag create 與 ScheduledBlock drag reschedule 仍正常。
+- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
+
 ### Build
 
 - [ ] `npm run test:run` 全部通過。
