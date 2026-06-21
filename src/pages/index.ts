@@ -1,0 +1,5 @@
+export { DashboardPage } from './DashboardPage'
+export { PomodoroPage } from './PomodoroPage'
+export { SchedulePage } from './SchedulePage'
+export { SettingsPage } from './SettingsPage'
+export { TasksPage } from './TasksPage'
