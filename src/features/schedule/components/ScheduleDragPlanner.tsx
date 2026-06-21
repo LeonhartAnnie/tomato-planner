@@ -3,23 +3,25 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { CreateScheduledBlockInput } from '../../../application/schedule/createScheduledBlock'
 import type { CalendarEvent, ScheduledBlock, Task } from '../../../types'
 import { toErrorMessage } from '../../../utils/error'
 import {
   createDroppedTaskTimeRange,
   createRescheduledBlockTimeRange,
-  getScheduledBlockDurationMinutes,
 } from '../selectors/dragScheduleHelpers'
 import {
-  formatScheduleTimeRange,
   getNextSevenDays,
   groupScheduleItemsByDate,
 } from '../selectors/scheduleDisplaySelectors'
 import { calculateTimeFromGridDrop } from '../selectors/scheduleTimeGridHelpers'
 import { DraggableTaskCard } from './DraggableTaskCard'
 import { DroppableScheduleDay } from './DroppableScheduleDay'
+import {
+  ScheduleDropConfirmDialog,
+  type ScheduleDropPending,
+} from './ScheduleDropConfirmDialog'
 import { TimeGridScheduleView } from './TimeGridScheduleView'
 
 interface ScheduleDragPlannerProps {
@@ -35,20 +37,6 @@ interface ScheduleDragPlannerProps {
   onUpdate: (block: ScheduledBlock) => Promise<boolean>
   onDelete: (id: string) => void
 }
-
-type PendingDrop =
-  | {
-      type: 'create'
-      task: Task
-      targetDateKey: string
-      prefilledFromTimeGrid: boolean
-    }
-  | {
-      type: 'reschedule'
-      block: ScheduledBlock
-      targetDateKey: string
-      prefilledFromTimeGrid: boolean
-    }
 
 type ActiveDragType = 'task' | 'scheduled-block'
 
@@ -75,9 +63,10 @@ export function ScheduleDragPlanner({
   onUpdate,
   onDelete,
 }: ScheduleDragPlannerProps) {
-  const [pendingDrop, setPendingDrop] = useState<PendingDrop>()
-  const [startTime, setStartTime] = useState('09:00')
+  const [pendingDrop, setPendingDrop] = useState<ScheduleDropPending>()
   const [formError, setFormError] = useState<string>()
+  const [successMessage, setSuccessMessage] = useState<string>()
+  const [showStoreError, setShowStoreError] = useState(false)
   const [activeDragType, setActiveDragType] = useState<ActiveDragType>()
   const dateKeys = useMemo(() => getNextSevenDays(), [])
   const dayGroups = groupScheduleItemsByDate(
@@ -89,6 +78,14 @@ export function ScheduleDragPlanner({
   const unscheduledTasks = tasks.filter(
     (task) => !scheduledTaskIds.has(task.id),
   )
+
+  useEffect(() => {
+    if (!successMessage) {
+      return
+    }
+    const timeoutId = window.setTimeout(() => setSuccessMessage(undefined), 3000)
+    return () => window.clearTimeout(timeoutId)
+  }, [successMessage])
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragType(undefined)
@@ -137,10 +134,12 @@ export function ScheduleDragPlanner({
           type: 'create',
           task,
           targetDateKey: overData.dateKey,
-          prefilledFromTimeGrid: isTimeGridDay,
+          initialTime: nextStartTime,
+          source: isTimeGridDay ? 'time-grid' : 'schedule-day',
         })
-        setStartTime(nextStartTime)
         setFormError(undefined)
+        setSuccessMessage(undefined)
+        setShowStoreError(false)
       }
       return
     }
@@ -155,10 +154,12 @@ export function ScheduleDragPlanner({
           type: 'reschedule',
           block,
           targetDateKey: overData.dateKey,
-          prefilledFromTimeGrid: isTimeGridDay,
+          initialTime: nextStartTime,
+          source: isTimeGridDay ? 'time-grid' : 'schedule-day',
         })
-        setStartTime(nextStartTime)
         setFormError(undefined)
+        setSuccessMessage(undefined)
+        setShowStoreError(false)
       }
     }
   }
@@ -170,8 +171,7 @@ export function ScheduleDragPlanner({
     )
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleConfirm = async (startTime: string) => {
     if (!pendingDrop) {
       return
     }
@@ -207,19 +207,27 @@ export function ScheduleDragPlanner({
       }
 
       if (succeeded) {
+        const message =
+          pendingDrop.type === 'create'
+            ? '已建立排程'
+            : '已重新排程'
         setPendingDrop(undefined)
-        setStartTime('09:00')
         setFormError(undefined)
+        setSuccessMessage(message)
+        setShowStoreError(false)
+      } else {
+        setShowStoreError(true)
       }
     } catch (submitError: unknown) {
       setFormError(toErrorMessage(submitError))
+      setShowStoreError(false)
     }
   }
 
   const cancelPendingDrop = () => {
     setPendingDrop(undefined)
-    setStartTime('09:00')
     setFormError(undefined)
+    setShowStoreError(false)
   }
 
   return (
@@ -289,73 +297,21 @@ export function ScheduleDragPlanner({
         </details>
       </DndContext>
 
+      {successMessage && (
+        <p className="schedule-success-message" role="status">
+          {successMessage}
+        </p>
+      )}
+
       {pendingDrop && (
-        <form
-          className="pending-drop-form"
-          onSubmit={(event) => void handleSubmit(event)}
-          aria-labelledby="pending-drop-title"
-        >
-          <h3 id="pending-drop-title">
-            {pendingDrop.type === 'create'
-              ? `將任務「${pendingDrop.task.title}」排到 ${pendingDrop.targetDateKey}`
-              : `將排程「${pendingDrop.block.title}」重新排到 ${pendingDrop.targetDateKey}`}
-          </h3>
-          {pendingDrop.prefilledFromTimeGrid && (
-            <p className="time-grid-prefill-note">
-              {pendingDrop.type === 'create'
-                ? '已根據時間格線預填開始時間，可再手動修改。'
-                : '已根據時間格線預填新的開始時間，可再手動修改。'}
-            </p>
-          )}
-          {pendingDrop.type === 'create' ? (
-            <p className="pending-drop-summary">
-              任務預估時間：{pendingDrop.task.estimatedMinutes} 分鐘
-            </p>
-          ) : (
-            <div className="pending-drop-summary">
-              <p>
-                原本時間：
-                {formatScheduleTimeRange(
-                  pendingDrop.block.start,
-                  pendingDrop.block.end,
-                )}
-              </p>
-              <p>
-                保留時間：
-                {getScheduledBlockDurationMinutes(pendingDrop.block)} 分鐘
-              </p>
-            </div>
-          )}
-          <label>
-            {pendingDrop.type === 'create' ? '開始時間' : '新的開始時間'}
-            <input
-              required
-              type="time"
-              value={startTime}
-              onChange={(event) => setStartTime(event.target.value)}
-            />
-          </label>
-          {(formError || error) && (
-            <p className="pending-drop-error" role="alert">
-              {formError ?? error}
-            </p>
-          )}
-          <div className="pending-drop-actions">
-            <button type="submit" disabled={isBusy}>
-              {pendingDrop.type === 'create'
-                ? '確認建立排程'
-                : '確認重新排程'}
-            </button>
-            <button
-              type="button"
-              className="secondary"
-              disabled={isBusy}
-              onClick={cancelPendingDrop}
-            >
-              取消
-            </button>
-          </div>
-        </form>
+        <ScheduleDropConfirmDialog
+          pending={pendingDrop}
+          defaultDurationMinutes={defaultDurationMinutes}
+          isSubmitting={isBusy}
+          error={formError ?? (showStoreError ? error : undefined)}
+          onConfirm={handleConfirm}
+          onCancel={cancelPendingDrop}
+        />
       )}
     </section>
   )

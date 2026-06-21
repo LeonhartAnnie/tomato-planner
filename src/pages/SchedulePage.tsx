@@ -43,8 +43,13 @@ export function SchedulePage() {
   const handleAdd = (input: CreateScheduledBlockInput) => addBlock(input)
 
   return (
-    <section>
-      <h1>排程</h1>
+    <section className="schedule-page">
+      <header className="schedule-page-heading">
+        <div>
+          <h1>排程</h1>
+          <p>以時間格線安排主要工作，其他建立與整合工具可從下方展開。</p>
+        </div>
+      </header>
       {(taskError || scheduleError || settingsError || pomodoroError) && (
         <p className="error-message">
           {taskError ?? scheduleError ?? settingsError ?? pomodoroError}
@@ -70,6 +75,10 @@ export function SchedulePage() {
         onDelete={(id) => void deleteBlock(id)}
       />
 
+      <div className="schedule-tools-heading">
+        <h2>其他排程工具</h2>
+        <p>手動建立、清單檢視與 Google Calendar 整合維持為次要工具。</p>
+      </div>
       <div className="schedule-secondary-sections">
         <details className="schedule-section">
           <summary>手動建立排程</summary>

@@ -244,6 +244,19 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 - [ ] 舊有 drop 到日期後手動輸入時間的流程仍正常。
 - [ ] Task create、Block reschedule、Start Focus、Calendar、Drive 與 Pomodoro 回歸正常。
 
+### v2.6 Schedule interaction UX cleanup
+
+- [ ] 拖 Task 到日期後立即顯示「建立排程」dialog。
+- [ ] 拖 Task 到時間格線後 dialog 立即顯示且開始時間已預填。
+- [ ] 拖 ScheduledBlock 到日期後立即顯示「重新排程」dialog。
+- [ ] 拖 ScheduledBlock 到時間格線後 dialog 顯示且新時間已預填。
+- [ ] 按取消或 Esc 關閉 dialog 時不修改資料。
+- [ ] 發生時間衝突時 dialog 保持開啟並顯示錯誤。
+- [ ] 成功後 dialog 關閉並顯示簡短成功訊息。
+- [ ] 小螢幕 dialog 內容可捲動且按鈕可操作。
+- [ ] 手動排程、週排程清單與 Google Calendar panel 仍可使用。
+- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
+
 ### Build
 
 - [ ] `npm run test:run` 全部通過。
