@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import type { CreateScheduledBlockInput } from '../application/schedule/createScheduledBlock'
 import { ScheduleBlockForm } from '../features/schedule/components/ScheduleBlockForm'
 import { GoogleCalendarPanel } from '../features/schedule/components/GoogleCalendarPanel'
+import { ScheduleDragPlanner } from '../features/schedule/components/ScheduleDragPlanner'
 import { ScheduleWeekView } from '../features/schedule/components/ScheduleWeekView'
 import { createSampleCalendarEvents } from '../features/schedule/sampleCalendarEvents'
 import { useScheduleStore } from '../stores/scheduleStore'
+import { useSettingsStore } from '../stores/settingsStore'
 import { usePomodoroStore } from '../stores/pomodoroStore'
 import { useTaskStore } from '../stores/taskStore'
 
@@ -25,21 +27,26 @@ export function SchedulePage() {
     (state) => state.setCalendarEvents,
   )
   const pomodoroError = usePomodoroStore((state) => state.error)
-  const isLoading = tasksLoading || scheduleLoading
+  const settings = useSettingsStore((state) => state.settings)
+  const settingsLoading = useSettingsStore((state) => state.isLoading)
+  const settingsError = useSettingsStore((state) => state.error)
+  const loadSettings = useSettingsStore((state) => state.loadSettings)
+  const isLoading = tasksLoading || scheduleLoading || settingsLoading
 
   useEffect(() => {
     void loadTasks()
     void loadSchedule()
-  }, [loadSchedule, loadTasks])
+    void loadSettings()
+  }, [loadSchedule, loadSettings, loadTasks])
 
   const handleAdd = (input: CreateScheduledBlockInput) => addBlock(input)
 
   return (
     <section>
       <h1>排程</h1>
-      {(taskError || scheduleError || pomodoroError) && (
+      {(taskError || scheduleError || settingsError || pomodoroError) && (
         <p className="error-message">
-          {taskError ?? scheduleError ?? pomodoroError}
+          {taskError ?? scheduleError ?? settingsError ?? pomodoroError}
         </p>
       )}
       {isLoading && <p role="status">處理中…</p>}
@@ -63,6 +70,17 @@ export function SchedulePage() {
           </button>
         </div>
       )}
+
+      <ScheduleDragPlanner
+        tasks={tasks}
+        blocks={blocks}
+        calendarEvents={calendarEvents}
+        defaultDurationMinutes={settings.defaultTaskDurationMinutes}
+        isBusy={isLoading}
+        error={scheduleError}
+        onAdd={handleAdd}
+        onDelete={(id) => void deleteBlock(id)}
+      />
 
       <div className="schedule-layout">
         <ScheduleBlockForm

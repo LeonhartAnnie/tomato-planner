@@ -101,6 +101,32 @@ h1 { margin-top: 0; }
 .schedule-day .schedule-block-list { margin: 0; }
 .empty-schedule-day { margin: 0; color: #78665f; }
 
+.drag-planner { margin: 28px 0; padding: 20px; border: 1px solid #d6c8c2; border-radius: 16px; background: white; }
+.drag-planner > h2 { margin: 0; }
+.drag-planner-help { margin: 8px 0 20px; color: #6f5e57; }
+.drag-planner-layout { display: grid; grid-template-columns: minmax(190px, 240px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.draggable-task-panel { padding: 14px; border-radius: 12px; background: #fff8f2; }
+.draggable-task-panel > h3 { margin: 0 0 12px; }
+.draggable-task-panel > p { margin: 0; color: #78665f; }
+.draggable-task-list { display: grid; gap: 9px; }
+.draggable-task-card { display: grid; gap: 4px; width: 100%; padding: 12px; border: 1px solid #c24132; border-radius: 9px; color: #2c2522; background: white; font: inherit; text-align: left; touch-action: none; cursor: grab; }
+.draggable-task-card span { color: #78665f; font-size: 0.85rem; }
+.draggable-task-card:disabled { cursor: not-allowed; opacity: 0.55; }
+.draggable-task-card.is-dragging { z-index: 10; opacity: 0.7; cursor: grabbing; box-shadow: 0 8px 20px rgb(70 40 30 / 18%); }
+.droppable-day-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.droppable-schedule-day { min-height: 130px; padding: 12px; border: 2px dashed #d4b8ad; border-radius: 10px; background: #fffdfb; transition: border-color 120ms ease, background-color 120ms ease; }
+.droppable-schedule-day.is-over { border-color: #3868ad; background: #eef5ff; }
+.droppable-schedule-day > h3 { margin: 0 0 10px; font-size: 0.95rem; }
+.droppable-schedule-day .schedule-block-item { padding: 12px; }
+.pending-drop-form { display: grid; gap: 14px; max-width: 520px; margin-top: 20px; padding: 18px; border: 1px solid #d6c8c2; border-radius: 12px; background: #fff8f2; }
+.pending-drop-form h3 { margin: 0; }
+.pending-drop-form label { display: grid; gap: 6px; }
+.pending-drop-form input { max-width: 180px; padding: 9px; border: 1px solid #cdbbb4; border-radius: 8px; font: inherit; }
+.pending-drop-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pending-drop-actions button { padding: 9px 13px; border: 1px solid #c24132; border-radius: 8px; color: white; background: #c24132; cursor: pointer; }
+.pending-drop-actions button:disabled { cursor: not-allowed; opacity: 0.55; }
+.pending-drop-actions .secondary { border-color: #8a6a5e; color: #5d4d47; background: white; }
+
 .settings-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 620px; padding: 24px; border: 1px solid #edc9bd; border-radius: 16px; background: white; }
 .settings-form label { display: grid; gap: 6px; font-size: 0.9rem; }
 .settings-form input { width: 100%; padding: 10px; border: 1px solid #cdbbb4; border-radius: 8px; font: inherit; }
@@ -141,6 +167,8 @@ h1 { margin-top: 0; }
   .schedule-layout { grid-template-columns: 1fr; }
   .schedule-block-item { flex-direction: column; }
   .schedule-block-actions { align-content: normal; }
+  .drag-planner-layout { grid-template-columns: 1fr; }
+  .droppable-day-list { grid-template-columns: 1fr; }
   .settings-form { grid-template-columns: 1fr; }
   .settings-feedback, .settings-actions { grid-column: auto; }
   .sync-status-details div { grid-template-columns: 1fr; gap: 4px; }
