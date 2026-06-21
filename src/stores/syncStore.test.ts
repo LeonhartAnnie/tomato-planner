@@ -12,8 +12,24 @@ const restoreResult = {
   backupUpdatedAt: '2026-06-21T10:30:00.000Z',
 }
 
+const localSummary = {
+  taskCount: 2,
+  scheduledBlockCount: 1,
+  pomodoroSessionCount: 3,
+  hasSettings: true,
+  latestDataUpdatedAt: '2026-06-21T09:00:00.000Z',
+}
+
+const cloudSummary = {
+  ...localSummary,
+  taskCount: 4,
+  latestDataUpdatedAt: '2026-06-21T10:30:00.000Z',
+}
+
 const createService = (): GoogleDriveBackupService => ({
   ensureAuthorized: vi.fn().mockResolvedValue(undefined),
+  getLocalBackupSummary: vi.fn().mockResolvedValue(localSummary),
+  getCloudBackupSummary: vi.fn().mockResolvedValue(cloudSummary),
   uploadLocalBackup: vi.fn().mockResolvedValue(uploadResult),
   restoreCloudBackup: vi.fn().mockResolvedValue(restoreResult),
 })
@@ -25,6 +41,87 @@ beforeEach(() => {
     lastSyncedAt: undefined,
     lastAction: undefined,
     lastBackupUpdatedAt: undefined,
+    localSummary: undefined,
+    cloudSummary: undefined,
+    summaryStatus: 'idle',
+    summaryError: undefined,
+  })
+})
+
+describe('syncStore backup summaries', () => {
+  it('loads a local summary without requesting authorization', async () => {
+    const service = createService()
+
+    await expect(
+      useSyncStore.getState().loadLocalBackupSummary(service),
+    ).resolves.toBe(true)
+
+    expect(service.ensureAuthorized).not.toHaveBeenCalled()
+    expect(useSyncStore.getState()).toMatchObject({
+      summaryStatus: 'success',
+      localSummary,
+    })
+  })
+
+  it('loads a cloud summary after authorization', async () => {
+    const service = createService()
+
+    await expect(
+      useSyncStore.getState().loadCloudBackupSummary(service),
+    ).resolves.toBe(true)
+
+    expect(service.ensureAuthorized).toHaveBeenCalledOnce()
+    expect(service.getCloudBackupSummary).toHaveBeenCalledOnce()
+    expect(useSyncStore.getState()).toMatchObject({
+      summaryStatus: 'success',
+      cloudSummary,
+    })
+  })
+
+  it('represents a missing cloud backup as a successful empty result', async () => {
+    const service = createService()
+    vi.mocked(service.getCloudBackupSummary).mockResolvedValue(undefined)
+    useSyncStore.setState({ cloudSummary })
+
+    await useSyncStore.getState().loadCloudBackupSummary(service)
+
+    expect(useSyncStore.getState().summaryStatus).toBe('success')
+    expect(useSyncStore.getState().cloudSummary).toBeUndefined()
+  })
+
+  it('does not read cloud data when authorization fails', async () => {
+    const service = createService()
+    vi.mocked(service.ensureAuthorized).mockRejectedValue(
+      new Error('Authorization denied'),
+    )
+
+    await expect(
+      useSyncStore.getState().loadCloudBackupSummary(service),
+    ).resolves.toBe(false)
+
+    expect(service.getCloudBackupSummary).not.toHaveBeenCalled()
+    expect(useSyncStore.getState()).toMatchObject({
+      summaryStatus: 'error',
+      summaryError: 'Authorization denied',
+    })
+  })
+
+  it('stores summary read failures without running backup operations', async () => {
+    const service = createService()
+    vi.mocked(service.getLocalBackupSummary).mockRejectedValue(
+      new Error('Local summary failed'),
+    )
+
+    await expect(
+      useSyncStore.getState().loadLocalBackupSummary(service),
+    ).resolves.toBe(false)
+
+    expect(service.uploadLocalBackup).not.toHaveBeenCalled()
+    expect(service.restoreCloudBackup).not.toHaveBeenCalled()
+    expect(useSyncStore.getState()).toMatchObject({
+      summaryStatus: 'error',
+      summaryError: 'Local summary failed',
+    })
   })
 })
 

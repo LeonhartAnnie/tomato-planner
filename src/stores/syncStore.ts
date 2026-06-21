@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { BackupSummary } from '../application/sync/backupSummary'
 import {
   createGoogleDriveSyncService,
   type GoogleDriveBackupService,
@@ -6,6 +7,7 @@ import {
 
 export type SyncStoreStatus = 'idle' | 'syncing' | 'success' | 'error'
 export type SyncStoreAction = 'upload' | 'restore'
+export type BackupSummaryStatus = 'idle' | 'loading' | 'success' | 'error'
 
 export interface SyncStoreState {
   status: SyncStoreStatus
@@ -13,6 +15,16 @@ export interface SyncStoreState {
   lastSyncedAt?: string
   lastAction?: SyncStoreAction
   lastBackupUpdatedAt?: string
+  localSummary?: BackupSummary
+  cloudSummary?: BackupSummary
+  summaryStatus: BackupSummaryStatus
+  summaryError?: string
+  loadLocalBackupSummary: (
+    service?: GoogleDriveBackupService,
+  ) => Promise<boolean>
+  loadCloudBackupSummary: (
+    service?: GoogleDriveBackupService,
+  ) => Promise<boolean>
   uploadLocalBackup: (service?: GoogleDriveBackupService) => Promise<boolean>
   restoreCloudBackup: (service?: GoogleDriveBackupService) => Promise<boolean>
   resetSyncState: () => void
@@ -66,6 +78,45 @@ export const useSyncStore = create<SyncStoreState>((set) => {
     lastSyncedAt: undefined,
     lastAction: undefined,
     lastBackupUpdatedAt: undefined,
+    localSummary: undefined,
+    cloudSummary: undefined,
+    summaryStatus: 'idle',
+    summaryError: undefined,
+
+    loadLocalBackupSummary: async (
+      service = createGoogleDriveSyncService(),
+    ) => {
+      set({ summaryStatus: 'loading', summaryError: undefined })
+      try {
+        const localSummary = await service.getLocalBackupSummary()
+        set({ localSummary, summaryStatus: 'success' })
+        return true
+      } catch (error: unknown) {
+        set({
+          summaryStatus: 'error',
+          summaryError: toSyncErrorMessage(error),
+        })
+        return false
+      }
+    },
+
+    loadCloudBackupSummary: async (
+      service = createGoogleDriveSyncService(),
+    ) => {
+      set({ summaryStatus: 'loading', summaryError: undefined })
+      try {
+        await service.ensureAuthorized()
+        const cloudSummary = await service.getCloudBackupSummary()
+        set({ cloudSummary, summaryStatus: 'success' })
+        return true
+      } catch (error: unknown) {
+        set({
+          summaryStatus: 'error',
+          summaryError: toSyncErrorMessage(error),
+        })
+        return false
+      }
+    },
 
     uploadLocalBackup: (service = createGoogleDriveSyncService()) =>
       runBackupAction(service, async () => {

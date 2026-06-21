@@ -2,6 +2,9 @@ import type { CloudBackupRepository } from '../../application/sync/cloudBackupRe
 import { CloudBackupJsonRepository } from '../../application/sync/cloudBackupJsonRepository'
 import type { CloudBackupTextStorage } from '../../application/sync/cloudBackupTextStorage'
 import type { LocalAppDataRepository } from '../../application/sync/localAppDataRepository'
+import type { BackupSummary } from '../../application/sync/backupSummary'
+import { getCloudBackupSummary } from '../../application/sync/getCloudBackupSummary'
+import { getLocalBackupSummary } from '../../application/sync/getLocalBackupSummary'
 import {
   restoreCloudBackup,
   type RestoreCloudBackupResult,
@@ -24,6 +27,8 @@ import { localAppDataDexieRepository } from '../repositories/localAppDataDexieRe
 
 export interface GoogleDriveBackupService {
   ensureAuthorized(): Promise<void>
+  getLocalBackupSummary(): Promise<BackupSummary>
+  getCloudBackupSummary(): Promise<BackupSummary | undefined>
   uploadLocalBackup(): Promise<UploadLocalBackupResult>
   restoreCloudBackup(): Promise<RestoreCloudBackupResult>
 }
@@ -72,6 +77,8 @@ export const createGoogleDriveSyncService = (
     ensureAuthorized: async () => {
       await tokenProvider.getAccessToken(GOOGLE_DRIVE_APPDATA_SCOPE)
     },
+    getLocalBackupSummary: () => getLocalBackupSummary(localRepository),
+    getCloudBackupSummary: () => getCloudBackupSummary(cloudRepository),
     uploadLocalBackup: () =>
       uploadLocalBackup(
         localRepository,

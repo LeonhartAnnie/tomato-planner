@@ -147,6 +147,11 @@ codec、repositories、Dexie 或 application use case。備份不包含 Calendar
 activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智慧同步，必須先
 加入 app-level revision metadata 與 deletion tombstone。
 
+上傳或還原前會讀取本機與雲端備份摘要，顯示任務、排程、番茄鐘紀錄數量及資料
+時間。摘要只包含 `CloudBackupData` v1 已定義的 app-owned data，不會讀取
+CalendarEvent 或 activeTimer。使用者必須在安全確認 dialog 中再次確認，才會執行
+覆蓋操作；摘要或 Google 授權載入失敗時不會執行上傳或還原。
+
 ## Manual QA Checklist
 
 ### Task
@@ -256,6 +261,20 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 - [ ] 小螢幕 dialog 內容可捲動且按鈕可操作。
 - [ ] 手動排程、週排程清單與 Google Calendar panel 仍可使用。
 - [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
+
+### v2.7 Google Drive backup / restore safety UX
+
+- [ ] 上傳前顯示本機摘要與「覆蓋雲端」警告。
+- [ ] 雲端已有備份時，上傳 dialog 同時顯示雲端摘要。
+- [ ] 雲端沒有備份時，上傳 dialog 顯示將建立新備份。
+- [ ] 還原前顯示雲端摘要、本機摘要與「覆蓋本機」警告。
+- [ ] 雲端沒有備份時不開啟還原 dialog，並顯示明確提示。
+- [ ] 取消 dialog 不執行上傳或還原。
+- [ ] Google 授權或摘要載入失敗時不執行覆蓋操作。
+- [ ] 上傳／還原失敗時 dialog 保持開啟並顯示錯誤。
+- [ ] 上傳／還原成功後 dialog 關閉，狀態與備份資料時間更新。
+- [ ] 小螢幕 dialog 可捲動且操作按鈕可使用。
+- [ ] Google Calendar、Schedule 與 Pomodoro 行為未受影響。
 
 ### Build
 

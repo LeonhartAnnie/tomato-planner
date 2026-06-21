@@ -109,6 +109,45 @@ describe('createGoogleDriveSyncService', () => {
     expect(localRepository.replaceAllCallCount).toBe(0)
   })
 
+  it('reads a local backup summary without requesting Google authorization', async () => {
+    const getAccessToken = vi.fn().mockResolvedValue('drive-token')
+    const service = createGoogleDriveSyncService({
+      localRepository: new TestLocalAppDataRepository(),
+      cloudTextStorage: new InMemoryCloudBackupTextStorage(),
+      tokenProvider: { getAccessToken },
+    })
+
+    await expect(service.getLocalBackupSummary()).resolves.toMatchObject({
+      taskCount: 1,
+      latestDataUpdatedAt: localTask.updatedAt,
+    })
+    expect(getAccessToken).not.toHaveBeenCalled()
+  })
+
+  it('reads an existing cloud backup summary through the JSON repository', async () => {
+    const cloudBackup = createCloudBackup('2026-06-21T11:00:00.000Z')
+    const service = createService(
+      new TestLocalAppDataRepository(),
+      new InMemoryCloudBackupTextStorage(serializeCloudBackupData(cloudBackup)),
+    )
+
+    await expect(service.getCloudBackupSummary()).resolves.toEqual({
+      taskCount: 1,
+      scheduledBlockCount: 0,
+      pomodoroSessionCount: 0,
+      hasSettings: true,
+      latestDataUpdatedAt: cloudBackup.updatedAt,
+    })
+  })
+
+  it('returns undefined when cloud backup text does not exist', async () => {
+    const service = createService(
+      new TestLocalAppDataRepository(),
+      new InMemoryCloudBackupTextStorage(),
+    )
+    await expect(service.getCloudBackupSummary()).resolves.toBeUndefined()
+  })
+
   it('writes local backup JSON when cloud text does not exist', async () => {
     const localRepository = new TestLocalAppDataRepository()
     const cloudTextStorage = new InMemoryCloudBackupTextStorage()
