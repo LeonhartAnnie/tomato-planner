@@ -13,18 +13,22 @@ import {
   getScheduledBlockDurationMinutes,
 } from '../selectors/dragScheduleHelpers'
 import {
+  formatScheduleTimeRange,
   getNextSevenDays,
   groupScheduleItemsByDate,
-  formatScheduleTimeRange,
 } from '../selectors/scheduleDisplaySelectors'
+import { calculateTimeFromGridDrop } from '../selectors/scheduleTimeGridHelpers'
 import { DraggableTaskCard } from './DraggableTaskCard'
 import { DroppableScheduleDay } from './DroppableScheduleDay'
+import { TimeGridScheduleView } from './TimeGridScheduleView'
 
 interface ScheduleDragPlannerProps {
   tasks: Task[]
   blocks: ScheduledBlock[]
   calendarEvents: CalendarEvent[]
   defaultDurationMinutes: number
+  calendarViewStartHour: number
+  calendarViewEndHour: number
   isBusy: boolean
   error?: string | null
   onAdd: (input: CreateScheduledBlockInput) => Promise<boolean>
@@ -33,20 +37,38 @@ interface ScheduleDragPlannerProps {
 }
 
 type PendingDrop =
-  | { type: 'create'; task: Task; targetDateKey: string }
+  | {
+      type: 'create'
+      task: Task
+      targetDateKey: string
+      prefilledFromTimeGrid: boolean
+    }
   | {
       type: 'reschedule'
       block: ScheduledBlock
       targetDateKey: string
+      prefilledFromTimeGrid: boolean
     }
 
 type ActiveDragType = 'task' | 'scheduled-block'
+
+const getActivatorClientY = (event: Event): number | undefined => {
+  if (event instanceof MouseEvent) {
+    return event.clientY
+  }
+  if (typeof TouchEvent !== 'undefined' && event instanceof TouchEvent) {
+    return event.touches[0]?.clientY ?? event.changedTouches[0]?.clientY
+  }
+  return undefined
+}
 
 export function ScheduleDragPlanner({
   tasks,
   blocks,
   calendarEvents,
   defaultDurationMinutes,
+  calendarViewStartHour,
+  calendarViewEndHour,
   isBusy,
   error,
   onAdd,
@@ -68,15 +90,41 @@ export function ScheduleDragPlanner({
     (task) => !scheduledTaskIds.has(task.id),
   )
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragType(undefined)
+    const { active, activatorEvent, delta, over } = event
     const activeData = active.data.current
     const overData = over?.data.current
+    const isScheduleDay = overData?.type === 'schedule-day'
+    const isTimeGridDay = overData?.type === 'time-grid-day'
     if (
-      overData?.type !== 'schedule-day' ||
-      typeof overData.dateKey !== 'string'
+      (!isScheduleDay && !isTimeGridDay) ||
+      typeof overData?.dateKey !== 'string' ||
+      !over
     ) {
       return
+    }
+
+    let nextStartTime = '09:00'
+    if (isTimeGridDay) {
+      try {
+        const activatorClientY = getActivatorClientY(activatorEvent)
+        const pointerY =
+          activatorClientY === undefined
+            ? over.rect.top + over.rect.height / 2
+            : activatorClientY + delta.y
+        nextStartTime = calculateTimeFromGridDrop({
+          pointerY,
+          gridTop: over.rect.top,
+          gridHeight: over.rect.height,
+          startHour: calendarViewStartHour,
+          endHour: calendarViewEndHour,
+          snapMinutes: 15,
+        }).timeString
+      } catch (dropError: unknown) {
+        setFormError(toErrorMessage(dropError))
+        return
+      }
     }
 
     if (
@@ -89,7 +137,9 @@ export function ScheduleDragPlanner({
           type: 'create',
           task,
           targetDateKey: overData.dateKey,
+          prefilledFromTimeGrid: isTimeGridDay,
         })
+        setStartTime(nextStartTime)
         setFormError(undefined)
       }
       return
@@ -105,7 +155,9 @@ export function ScheduleDragPlanner({
           type: 'reschedule',
           block,
           targetDateKey: overData.dateKey,
+          prefilledFromTimeGrid: isTimeGridDay,
         })
+        setStartTime(nextStartTime)
         setFormError(undefined)
       }
     }
@@ -171,48 +223,70 @@ export function ScheduleDragPlanner({
   }
 
   return (
-    <section className="drag-planner" aria-labelledby="drag-planner-title">
-      <h2 id="drag-planner-title">拖曳排程</h2>
-      <p className="drag-planner-help">
-        將未排程任務拖到日期建立排程，或拖曳既有排程重新安排日期。
-      </p>
-
+    <section className="schedule-dnd-workspace" aria-label="排程拖曳工作區">
       <DndContext
         onDragStart={handleDragStart}
         onDragCancel={() => setActiveDragType(undefined)}
         onDragEnd={handleDragEnd}
       >
-        <div className="drag-planner-layout">
-          <section className="draggable-task-panel" aria-label="未排程任務">
-            <h3>未排程任務</h3>
-            {unscheduledTasks.length === 0 ? (
-              <p>目前沒有可拖曳的任務。</p>
-            ) : (
-              <div className="draggable-task-list">
-                {unscheduledTasks.map((task) => (
-                  <DraggableTaskCard
-                    key={task.id}
-                    task={task}
-                    disabled={isBusy}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+        <TimeGridScheduleView
+          blocks={blocks}
+          calendarEvents={calendarEvents}
+          calendarViewStartHour={calendarViewStartHour}
+          calendarViewEndHour={calendarViewEndHour}
+          isBusy={isBusy}
+          isDropActive={activeDragType !== undefined}
+        />
 
-          <div className="droppable-day-list">
-            {dayGroups.map((group) => (
-              <DroppableScheduleDay
-                key={group.dateKey}
-                dateKey={group.dateKey}
-                items={group.items}
-                isBusy={isBusy}
-                isDropActive={activeDragType !== undefined}
-                onDelete={onDelete}
-              />
-            ))}
+        <details className="schedule-section" open>
+          <summary>拖曳排程</summary>
+          <div className="schedule-section-content">
+            <section
+              className="drag-planner"
+              aria-labelledby="drag-planner-title"
+            >
+              <h2 id="drag-planner-title">拖曳排程</h2>
+              <p className="drag-planner-help">
+                可拖到日期後輸入時間，或直接拖到上方時間格線預填時間。
+              </p>
+
+              <div className="drag-planner-layout">
+                <section
+                  className="draggable-task-panel"
+                  aria-label="未排程任務"
+                >
+                  <h3>未排程任務</h3>
+                  {unscheduledTasks.length === 0 ? (
+                    <p>目前沒有可拖曳的任務。</p>
+                  ) : (
+                    <div className="draggable-task-list">
+                      {unscheduledTasks.map((task) => (
+                        <DraggableTaskCard
+                          key={task.id}
+                          task={task}
+                          disabled={isBusy}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <div className="droppable-day-list">
+                  {dayGroups.map((group) => (
+                    <DroppableScheduleDay
+                      key={group.dateKey}
+                      dateKey={group.dateKey}
+                      items={group.items}
+                      isBusy={isBusy}
+                      isDropActive={activeDragType !== undefined}
+                      onDelete={onDelete}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
+        </details>
       </DndContext>
 
       {pendingDrop && (
@@ -226,6 +300,13 @@ export function ScheduleDragPlanner({
               ? `將任務「${pendingDrop.task.title}」排到 ${pendingDrop.targetDateKey}`
               : `將排程「${pendingDrop.block.title}」重新排到 ${pendingDrop.targetDateKey}`}
           </h3>
+          {pendingDrop.prefilledFromTimeGrid && (
+            <p className="time-grid-prefill-note">
+              {pendingDrop.type === 'create'
+                ? '已根據時間格線預填開始時間，可再手動修改。'
+                : '已根據時間格線預填新的開始時間，可再手動修改。'}
+            </p>
+          )}
           {pendingDrop.type === 'create' ? (
             <p className="pending-drop-summary">
               任務預估時間：{pendingDrop.task.estimatedMinutes} 分鐘

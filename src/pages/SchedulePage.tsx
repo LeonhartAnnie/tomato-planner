@@ -5,7 +5,6 @@ import { ScheduleBlockForm } from '../features/schedule/components/ScheduleBlock
 import { GoogleCalendarPanel } from '../features/schedule/components/GoogleCalendarPanel'
 import { ScheduleDragPlanner } from '../features/schedule/components/ScheduleDragPlanner'
 import { ScheduleWeekView } from '../features/schedule/components/ScheduleWeekView'
-import { TimeGridScheduleView } from '../features/schedule/components/TimeGridScheduleView'
 import { createSampleCalendarEvents } from '../features/schedule/sampleCalendarEvents'
 import { useScheduleStore } from '../stores/scheduleStore'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -57,29 +56,19 @@ export function SchedulePage() {
           尚無可排程任務，請先前往 <Link to="/tasks">任務頁面</Link> 建立任務。
         </p>
       )}
-      <TimeGridScheduleView
+      <ScheduleDragPlanner
+        tasks={tasks}
         blocks={blocks}
         calendarEvents={calendarEvents}
+        defaultDurationMinutes={settings.defaultTaskDurationMinutes}
         calendarViewStartHour={settings.calendarViewStartHour}
         calendarViewEndHour={settings.calendarViewEndHour}
+        isBusy={isLoading}
+        error={scheduleError}
+        onAdd={handleAdd}
+        onUpdate={updateBlock}
+        onDelete={(id) => void deleteBlock(id)}
       />
-
-      <details className="schedule-section" open>
-        <summary>拖曳排程</summary>
-        <div className="schedule-section-content">
-          <ScheduleDragPlanner
-            tasks={tasks}
-            blocks={blocks}
-            calendarEvents={calendarEvents}
-            defaultDurationMinutes={settings.defaultTaskDurationMinutes}
-            isBusy={isLoading}
-            error={scheduleError}
-            onAdd={handleAdd}
-            onUpdate={updateBlock}
-            onDelete={(id) => void deleteBlock(id)}
-          />
-        </div>
-      </details>
 
       <div className="schedule-secondary-sections">
         <details className="schedule-section">

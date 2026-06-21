@@ -232,6 +232,18 @@ activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智
 - [ ] Task drag create 與 ScheduledBlock drag reschedule 仍正常。
 - [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
 
+### v2.5 Time grid drop scheduling
+
+- [ ] 將 Task 拖到時間格線 09:00 附近，pending create 預填最近的 15 分鐘時段。
+- [ ] 手動修改預填時間後可成功建立排程。
+- [ ] 將 ScheduledBlock 拖到時間格線 14:00 附近，pending reschedule 正確預填。
+- [ ] 取消 pending 後不建立或修改資料。
+- [ ] Drop 到格線底部不會產生 24:00 開始時間。
+- [ ] 修改 Settings 顯示起訖時間後，drop 換算仍正確。
+- [ ] CalendarEvent 維持 readonly 且不可拖曳。
+- [ ] 舊有 drop 到日期後手動輸入時間的流程仍正常。
+- [ ] Task create、Block reschedule、Start Focus、Calendar、Drive 與 Pomodoro 回歸正常。
+
 ### Build
 
 - [ ] `npm run test:run` 全部通過。

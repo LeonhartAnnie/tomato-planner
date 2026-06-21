@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateTimeGridPosition,
+  calculateTimeFromGridDrop,
   createHourlyTicks,
   formatDailySegmentTimeRange,
   splitEventIntoDailySegments,
@@ -248,5 +249,112 @@ describe('scheduleTimeGridHelpers', () => {
         dateKeys,
       ),
     ).toThrow('Invalid schedule event date')
+  })
+
+  describe('calculateTimeFromGridDrop', () => {
+    const baseInput = {
+      gridTop: 100,
+      gridHeight: 600,
+      startHour: 8,
+      endHour: 18,
+      snapMinutes: 15,
+    }
+
+    it('maps the top of the grid to startHour', () => {
+      expect(
+        calculateTimeFromGridDrop({ ...baseInput, pointerY: 100 }),
+      ).toEqual({ hour: 8, minute: 0, timeString: '08:00' })
+    })
+
+    it('maps the middle of the grid to the middle time', () => {
+      expect(
+        calculateTimeFromGridDrop({ ...baseInput, pointerY: 400 }),
+      ).toEqual({ hour: 13, minute: 0, timeString: '13:00' })
+    })
+
+    it('clamps the bottom to the last available slot', () => {
+      expect(
+        calculateTimeFromGridDrop({ ...baseInput, pointerY: 700 }),
+      ).toEqual({ hour: 17, minute: 45, timeString: '17:45' })
+    })
+
+    it('snaps to the nearest 15 minutes', () => {
+      expect(
+        calculateTimeFromGridDrop({
+          ...baseInput,
+          gridTop: 0,
+          gridHeight: 100,
+          pointerY: 7,
+        }),
+      ).toEqual({ hour: 8, minute: 45, timeString: '08:45' })
+    })
+
+    it('supports a 30 minute snap', () => {
+      expect(
+        calculateTimeFromGridDrop({
+          ...baseInput,
+          gridTop: 0,
+          gridHeight: 100,
+          pointerY: 7,
+          snapMinutes: 30,
+        }),
+      ).toEqual({ hour: 8, minute: 30, timeString: '08:30' })
+    })
+
+    it('clamps pointer positions above and below the grid', () => {
+      expect(
+        calculateTimeFromGridDrop({ ...baseInput, pointerY: 0 }).timeString,
+      ).toBe('08:00')
+      expect(
+        calculateTimeFromGridDrop({ ...baseInput, pointerY: 900 }).timeString,
+      ).toBe('17:45')
+    })
+
+    it('never returns 24:00 when endHour is 24', () => {
+      expect(
+        calculateTimeFromGridDrop({
+          ...baseInput,
+          pointerY: 700,
+          endHour: 24,
+        }).timeString,
+      ).toBe('23:45')
+    })
+
+    it('uses a 15 minute snap by default', () => {
+      const { snapMinutes: _snapMinutes, ...input } = baseInput
+      expect(
+        calculateTimeFromGridDrop({ ...input, pointerY: 700 }).timeString,
+      ).toBe('17:45')
+    })
+
+    it('rejects an invalid grid height', () => {
+      expect(() =>
+        calculateTimeFromGridDrop({
+          ...baseInput,
+          pointerY: 100,
+          gridHeight: 0,
+        }),
+      ).toThrow('Invalid time grid height')
+    })
+
+    it('rejects an invalid calendar range', () => {
+      expect(() =>
+        calculateTimeFromGridDrop({
+          ...baseInput,
+          pointerY: 100,
+          startHour: 18,
+        }),
+      ).toThrow('Invalid calendar view range')
+    })
+
+    it('rejects invalid snap minutes', () => {
+      expect(() =>
+        calculateTimeFromGridDrop({
+          ...baseInput,
+          pointerY: 100,
+          snapMinutes: 0,
+        }),
+      ).toThrow('Invalid time grid snap minutes')
+    })
   })
 })

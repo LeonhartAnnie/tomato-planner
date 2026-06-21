@@ -103,6 +103,7 @@ h1 { margin-top: 0; }
 
 .time-grid-schedule { margin-top: 32px; }
 .time-grid-schedule > h2 { margin-bottom: 14px; }
+.time-grid-help { margin: -6px 0 14px; color: #6f5e57; }
 .time-grid-scroll { max-height: clamp(420px, 72vh, 900px); overflow: auto; padding-bottom: 12px; overscroll-behavior: contain; scrollbar-gutter: stable; }
 .time-grid-frame { min-width: 960px; border: 1px solid #d6c8c2; border-radius: 12px; background: white; overflow: visible; }
 .time-grid-header { position: sticky; z-index: 4; top: 0; display: grid; grid-template-columns: 70px repeat(7, minmax(120px, 1fr)); border-bottom: 1px solid #d6c8c2; background: #fff8f2; }
@@ -114,16 +115,22 @@ h1 { margin-top: 0; }
 .time-grid-time-label.is-first { transform: none; }
 .time-grid-time-label.is-last { transform: translateY(-100%); }
 .time-grid-days { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); }
-.time-grid-day-column { position: relative; min-width: 0; border-right: 1px solid #e8d9d3; background: #fffdfb; }
+.time-grid-day-column { position: relative; min-width: 0; border-right: 1px solid #e8d9d3; background: #fffdfb; transition: background-color 120ms ease, box-shadow 120ms ease; }
 .time-grid-day-column:last-child { border-right: 0; }
+.time-grid-day-column.can-drop { background: #f7faff; box-shadow: inset 0 0 0 1px #b7ccec; }
+.time-grid-day-column.is-over { background: #e7f1ff; box-shadow: inset 0 0 0 3px #3868ad; }
+.time-grid-day-column.is-over::after { position: absolute; z-index: 4; top: 8px; right: 8px; padding: 4px 7px; border-radius: 999px; color: #285b9f; background: #fff; content: '放到此時間'; font-size: 0.7rem; font-weight: 700; pointer-events: none; }
 .time-grid-line { position: absolute; right: 0; left: 0; border-top: 1px solid #eee3de; pointer-events: none; }
-.time-grid-event { position: absolute; z-index: 1; right: 5px; left: 5px; display: grid; align-content: start; gap: 2px; min-height: 28px; padding: 5px 6px; border: 1px solid; border-radius: 7px; overflow: hidden; font-size: 0.72rem; line-height: 1.25; }
+.time-grid-event { position: absolute; z-index: 1; right: 5px; left: 5px; display: grid; align-content: start; gap: 2px; min-height: 28px; padding: 5px 6px; border: 1px solid; border-radius: 7px; overflow: hidden; font: inherit; font-size: 0.72rem; line-height: 1.25; text-align: left; }
 .time-grid-event strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .time-grid-event time, .time-grid-event span { font-size: 0.68rem; }
 .time-grid-scheduled-block { border-color: #d68b7e; color: #633029; background: #fff0ec; }
 .time-grid-calendar-event { border-color: #aaa0c4; border-style: dashed; color: #51466d; background: #f1edfa; }
 .time-grid-event.has-conflict { box-shadow: inset 3px 0 #d48b27; }
 .time-grid-conflict { color: #7b4b08; font-weight: 700; }
+.time-grid-draggable-event { touch-action: none; cursor: grab; }
+.time-grid-draggable-event:disabled { cursor: not-allowed; opacity: 0.6; }
+.time-grid-draggable-event.is-dragging { opacity: 0.78; cursor: grabbing; box-shadow: 0 8px 18px rgb(70 40 30 / 22%); }
 
 .schedule-section { margin-top: 18px; border: 1px solid #d6c8c2; border-radius: 12px; background: white; }
 .schedule-section > summary { padding: 14px 18px; color: #4f403a; font-weight: 700; cursor: pointer; }
@@ -164,6 +171,7 @@ h1 { margin-top: 0; }
 .pending-drop-form h3 { margin: 0; }
 .pending-drop-summary { margin: 0; color: #645d59; }
 .pending-drop-summary p { margin: 3px 0; }
+.time-grid-prefill-note { margin: 0; padding: 9px 11px; border-radius: 7px; color: #315f99; background: #eaf2ff; font-size: 0.88rem; }
 .pending-drop-error { margin: 0; padding: 10px 12px; border-left: 3px solid #b94b3f; border-radius: 6px; color: #8c231c; background: #fff1ef; }
 .pending-drop-form label { display: grid; gap: 6px; }
 .pending-drop-form input { max-width: 180px; padding: 9px; border: 1px solid #cdbbb4; border-radius: 8px; font: inherit; }
