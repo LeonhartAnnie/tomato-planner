@@ -250,6 +250,42 @@ h1 { margin-top: 0; }
 .backup-dialog-actions .danger { border: 1px solid #b33e33; color: white; background: #b33e33; }
 .backup-dialog-actions .secondary { border: 1px solid #8a6a5e; color: #5d4d47; background: white; }
 
+.dashboard-page { display: grid; gap: 24px; }
+.dashboard-heading h1 { margin-bottom: 6px; }
+.dashboard-heading p { margin: 0; color: #6f5e57; }
+.dashboard-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dashboard-summary article { display: grid; gap: 4px; padding: 18px; border: 1px solid #edc9bd; border-radius: 12px; background: white; }
+.dashboard-summary strong { color: #a5372c; font-size: 1.75rem; font-variant-numeric: tabular-nums; }
+.dashboard-summary span { color: #6f5e57; font-size: 0.9rem; }
+.onboarding-panel { display: grid; gap: 18px; padding: 22px; border: 1px solid #e5bbae; border-radius: 16px; background: #fffdfb; }
+.onboarding-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.onboarding-header h2 { margin: 0 0 6px; }
+.onboarding-header p { margin: 0; color: #6f5e57; }
+.onboarding-header button,
+.onboarding-collapsed button { flex: 0 0 auto; padding: 8px 12px; border: 1px solid #b99e94; border-radius: 8px; color: #5d4d47; background: white; cursor: pointer; }
+.onboarding-complete-message { margin: 0; padding: 11px 13px; border-radius: 9px; color: #2e6b37; background: #edf8ee; }
+.onboarding-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.onboarding-steps.is-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.onboarding-step { display: grid; align-content: space-between; gap: 16px; min-width: 0; padding: 16px; border: 1px solid #ddd1cc; border-radius: 11px; background: white; }
+.onboarding-step.status-next { border-color: #d77b68; box-shadow: 0 0 0 2px rgb(194 65 50 / 8%); }
+.onboarding-step.status-done { border-color: #b8d6bc; background: #fbfffb; }
+.onboarding-step.status-locked { color: #756b67; background: #f4f1ef; }
+.onboarding-step-content { display: grid; gap: 8px; }
+.onboarding-step h3, .onboarding-step p { margin: 0; }
+.onboarding-step h3 { font-size: 1rem; }
+.onboarding-step p { color: #6f5e57; font-size: 0.9rem; }
+.onboarding-badge { justify-self: start; padding: 4px 8px; border-radius: 999px; color: #5d4d47; background: #ece5e1; font-size: 0.76rem; font-weight: 700; }
+.onboarding-badge.status-next { color: #8b2f25; background: #f9ddd6; }
+.onboarding-badge.status-done { color: #2e6b37; background: #dcefdc; }
+.onboarding-badge.status-optional { color: #315f99; background: #e3edfb; }
+.onboarding-badge.status-locked { color: #756b67; background: #e5e0dd; }
+.onboarding-action { justify-self: start; padding: 8px 11px; border-radius: 7px; color: white; background: #a5372c; text-decoration: none; }
+.onboarding-locked-action { color: #756b67; font-size: 0.85rem; }
+.onboarding-collapsed { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 18px; border: 1px dashed #cdbbb4; border-radius: 12px; background: #fffdfb; }
+.onboarding-collapsed p { margin: 4px 0 0; color: #6f5e57; font-size: 0.9rem; }
+.dashboard-quick-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dashboard-quick-links a { padding: 14px; border: 1px solid #edc9bd; border-radius: 10px; background: white; text-align: center; }
+
 @media (max-width: 600px) {
   header { align-items: flex-start; flex-direction: column; }
   main { padding-top: 40px; }
@@ -280,4 +316,9 @@ h1 { margin-top: 0; }
   .schedule-dialog-details div { grid-template-columns: 1fr; gap: 3px; }
   .schedule-dialog-actions { display: grid; grid-template-columns: 1fr; }
   .schedule-success-message { top: 10px; right: 10px; left: 10px; text-align: center; }
+  .dashboard-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .onboarding-header, .onboarding-collapsed { align-items: stretch; flex-direction: column; }
+  .onboarding-header button, .onboarding-collapsed button { align-self: start; }
+  .onboarding-steps, .onboarding-steps.is-compact { grid-template-columns: 1fr; }
+  .dashboard-quick-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
