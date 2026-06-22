@@ -1,6 +1,7 @@
 import { useDraggable } from '@dnd-kit/core'
 import type { Task } from '../../../types'
 import { getTaskCategoryPresentation } from '../../tasks/selectors/taskCategoryPresentation'
+import { getTaskDeadlineDisplay } from '../../tasks/selectors/taskDeadlineDisplay'
 
 interface DraggableTaskCardProps {
   task: Task
@@ -12,6 +13,7 @@ export function DraggableTaskCard({
   disabled = false,
 }: DraggableTaskCardProps) {
   const category = getTaskCategoryPresentation(task.category)
+  const deadline = getTaskDeadlineDisplay(task.deadline)
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `task-${task.id}`,
@@ -39,6 +41,11 @@ export function DraggableTaskCard({
       <span className="task-category-badge">{category.label}</span>
       <span>預估 {task.estimatedMinutes} 分鐘</span>
       {task.location && <span>地點：{task.location}</span>}
+      {deadline.kind !== 'none' && (
+        <span className={`task-deadline-badge is-${deadline.kind}`}>
+          {deadline.label}
+        </span>
+      )}
       <span className="drag-item-hint">使用把手拖到時間格線</span>
       <button
         type="button"

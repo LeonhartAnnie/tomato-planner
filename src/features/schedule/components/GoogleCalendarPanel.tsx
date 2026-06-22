@@ -32,7 +32,7 @@ export function GoogleCalendarPanel() {
       <div>
         <h2 id="google-calendar-title">Google Calendar</h2>
         <p className="google-calendar-view-note">
-          目前匯入未來 7 天，時間格線會依目前視圖顯示對應日期。
+          目前只讀取未來 7 天，時間格線會依「今天／3 天／7 天」視圖顯示對應日期；不會修改 Google Calendar。
         </p>
         <dl className="google-calendar-status">
           <div>

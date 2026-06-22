@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type Ref } from 'react'
 import type { CreateTaskInput } from '../../../application/tasks/createTask'
 import type { Task } from '../../../types'
 import {
@@ -19,6 +19,7 @@ interface TaskFormProps {
   heading?: string
   headingId?: string
   defaultEstimatedMinutes?: number
+  titleInputRef?: Ref<HTMLInputElement>
 }
 
 interface TaskFormState {
@@ -54,6 +55,7 @@ export function TaskForm({
   heading,
   headingId,
   defaultEstimatedMinutes = 25,
+  titleInputRef,
 }: TaskFormProps) {
   const [form, setForm] = useState<TaskFormState>(() =>
     createEmptyForm(defaultEstimatedMinutes),
@@ -119,6 +121,8 @@ export function TaskForm({
       <label>
         標題
         <input
+          id="task-title-input"
+          ref={titleInputRef}
           required
           value={form.title}
           onChange={(event) => updateField('title', event.target.value)}

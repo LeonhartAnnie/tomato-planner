@@ -112,7 +112,7 @@ function TimeGridEventContent({
         <span className="task-category-badge">{category.label}</span>
       )}
       {isCrossDay && <span>跨天</span>}
-      {isExternal && <span>外部行程，唯讀</span>}
+      {isExternal && <span>Google Calendar 行程為唯讀</span>}
       {item.hasConflict && <span className="time-grid-conflict">時間衝突</span>}
     </div>
   )
@@ -258,7 +258,7 @@ function TimeGridItem(props: TimeGridItemProps) {
         item.hasConflict ? ' has-conflict' : ''
       }`}
       style={positionStyle}
-      aria-label={`外部行程，唯讀：${item.title}，${timeRange}`}
+      aria-label={`Google Calendar 行程為唯讀：${item.title}，${timeRange}`}
     >
       <TimeGridEventContent item={item} segment={segment} />
     </article>
@@ -366,6 +366,9 @@ export function TimeGridScheduleView({
         new Date(second.segment.segmentStart).getTime(),
     )
   }
+  const hasVisibleItems = [...segmentedItemsByDate.values()].some(
+    (entries) => entries.length > 0,
+  )
 
   const ticks = createHourlyTicks(
     calendarViewStartHour,
@@ -387,6 +390,11 @@ export function TimeGridScheduleView({
             '--time-grid-min-width': `${70 + dateKeys.length * 140}px`,
           } as CSSProperties}
         >
+          {!hasVisibleItems && (
+            <p className="time-grid-empty-hint">
+              把左側任務拖到時間格線，就能建立排程。
+            </p>
+          )}
           <div className="time-grid-header" aria-hidden="true">
             <div className="time-grid-corner">時間</div>
             {dateKeys.map((dateKey) => (

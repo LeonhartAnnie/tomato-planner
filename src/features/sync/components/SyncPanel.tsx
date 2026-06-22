@@ -73,6 +73,9 @@ export function SyncPanel() {
   return (
     <section className="sync-panel" aria-labelledby="google-drive-sync-title">
       <h2 id="google-drive-sync-title">Google Drive 備份與還原</h2>
+      <p className="sync-storage-note">
+        備份只儲存在 Google Drive appDataFolder；從雲端還原會以備份內容覆蓋本機 IndexedDB 中的 Tomato Planner 資料。
+      </p>
 
       <dl className="sync-status-details">
         <div><dt>狀態</dt><dd><span className={`sync-status-badge sync-status-${status}`}>{statusLabels[status]}</span></dd></div>

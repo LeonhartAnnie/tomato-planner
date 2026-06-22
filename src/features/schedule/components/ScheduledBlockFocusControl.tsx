@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getScheduledBlockFocusAvailability } from '../../../domain/schedule/scheduledBlockFocusRules'
 import { usePomodoroStore } from '../../../stores/pomodoroStore'
@@ -24,6 +24,7 @@ export function ScheduledBlockFocusControl({
   compact = false,
 }: ScheduledBlockFocusControlProps) {
   const navigate = useNavigate()
+  const reasonId = useId()
   const [currentTime, setCurrentTime] = useState(nowIso)
   const workMinutes = useSettingsStore((state) => state.settings.workMinutes)
   const startFocusForScheduledBlock = usePomodoroStore(
@@ -38,7 +39,7 @@ export function ScheduledBlockFocusControl({
   const availability = getScheduledBlockFocusAvailability(block, currentTime)
   const unavailableMessage = availability.canStart
     ? undefined
-    : unavailableMessages[availability.reason]
+    : `${unavailableMessages[availability.reason]}。只能開始目前時間內的排程。`
 
   const handleStartFocus = () => {
     if (startFocusForScheduledBlock(block, workMinutes)) {
@@ -54,13 +55,16 @@ export function ScheduledBlockFocusControl({
         type="button"
         disabled={isBusy || !availability.canStart}
         title={unavailableMessage}
+        aria-describedby={unavailableMessage ? reasonId : undefined}
         aria-label={unavailableMessage ?? `開始專注：${block.title}`}
         onClick={handleStartFocus}
       >
         Start Focus
       </button>
       {unavailableMessage && (
-        <small className="focus-unavailable-reason">{unavailableMessage}</small>
+        <small id={reasonId} className="focus-unavailable-reason">
+          {unavailableMessage}
+        </small>
       )}
     </div>
   )

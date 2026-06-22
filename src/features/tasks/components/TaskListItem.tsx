@@ -1,6 +1,6 @@
 import type { Task } from '../../../types'
-import { formatDateTime } from '../../../utils/dateTime'
 import { getTaskCategoryPresentation } from '../selectors/taskCategoryPresentation'
+import { getTaskDeadlineDisplay } from '../selectors/taskDeadlineDisplay'
 
 interface TaskListItemProps {
   task: Task
@@ -16,6 +16,7 @@ export function TaskListItem({
   onDelete,
 }: TaskListItemProps) {
   const category = getTaskCategoryPresentation(task.category)
+  const deadline = getTaskDeadlineDisplay(task.deadline)
 
   return (
     <li className="task-item">
@@ -35,10 +36,14 @@ export function TaskListItem({
               <dd>{task.location}</dd>
             </div>
           )}
-          {task.deadline && (
+          {deadline.kind !== 'none' && (
             <div>
-              <dt>截止</dt>
-              <dd>{formatDateTime(task.deadline)}</dd>
+              <dt>期限</dt>
+              <dd>
+                <span className={`task-deadline-badge is-${deadline.kind}`}>
+                  {deadline.label}
+                </span>
+              </dd>
             </div>
           )}
         </dl>

@@ -61,7 +61,7 @@ export function PomodoroPage() {
   const activeBlock = findScheduledBlockForTimer(activeTimer, blocks)
 
   return (
-    <section>
+    <section className="pomodoro-page">
       <h1>番茄鐘</h1>
 
       <div className="pomodoro-panel" aria-live="polite">
@@ -70,6 +70,15 @@ export function PomodoroPage() {
           <span>狀態：{timerStatus}</span>
         </div>
         <div className="timer-display">{remainingTime}</div>
+
+        {!activeTimer && (
+          <div className="pomodoro-idle-guidance">
+            <strong>目前沒有進行中的專注</strong>
+            <p>
+              你可以從排程頁中目前正在進行的任務開始 Focus，系統會依照排程長度建立專注計時；也可以直接在這裡手動開始。
+            </p>
+          </div>
+        )}
 
         {activeTimer && (
           <div className="timer-source">

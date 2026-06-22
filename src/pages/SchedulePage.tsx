@@ -82,7 +82,7 @@ export function SchedulePage() {
         error={scheduleError}
         onAdd={handleAdd}
         onUpdate={updateBlock}
-        onDelete={(id) => void deleteBlock(id)}
+        onDelete={deleteBlock}
         onAddTask={addTask}
         taskError={taskError}
         viewRange={viewRange}

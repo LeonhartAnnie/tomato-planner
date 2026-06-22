@@ -1,5 +1,6 @@
 import type { Task } from '../../../types'
 import { DraggableTaskCard } from './DraggableTaskCard'
+import { EmptyState } from '../../../components/EmptyState'
 
 interface ScheduleTaskTrayProps {
   tasks: Task[]
@@ -25,12 +26,14 @@ export function ScheduleTaskTray({
       </header>
 
       {tasks.length === 0 ? (
-        <div className="schedule-task-tray-empty">
-          <p>目前沒有可排程的任務。</p>
-          <button type="button" disabled={isBusy} onClick={onAddTask}>
-            ＋ 新增任務
-          </button>
-        </div>
+        <EmptyState
+          compact
+          title="沒有可排程任務"
+          description="建立任務後，可以從這裡拖到右側時間格線。"
+          actionLabel="＋ 新增任務"
+          actionDisabled={isBusy}
+          onAction={onAddTask}
+        />
       ) : (
         <div className="schedule-task-tray-list">
           {tasks.map((task) => (

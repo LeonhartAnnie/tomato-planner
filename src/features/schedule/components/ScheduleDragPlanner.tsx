@@ -37,7 +37,7 @@ interface ScheduleDragPlannerProps {
   error?: string | null
   onAdd: (input: CreateScheduledBlockInput) => Promise<boolean>
   onUpdate: (block: ScheduledBlock) => Promise<boolean>
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<boolean>
   onAddTask: (input: CreateTaskInput) => Promise<boolean>
   taskError?: string | null
   viewRange: ScheduleViewRange
@@ -235,6 +235,21 @@ export function ScheduleDragPlanner({
     setShowStoreError(false)
   }
 
+  const handleCancelBlock = async (id: string) => {
+    const succeeded = await onDelete(id)
+    if (succeeded) {
+      setSuccessMessage('已取消排程')
+    }
+  }
+
+  const handleAddTask = async (input: CreateTaskInput) => {
+    const succeeded = await onAddTask(input)
+    if (succeeded) {
+      setSuccessMessage('已新增任務')
+    }
+    return succeeded
+  }
+
   return (
     <section className="schedule-dnd-workspace" aria-label="排程拖曳工作區">
       <DndContext
@@ -264,7 +279,7 @@ export function ScheduleDragPlanner({
               calendarViewEndHour={calendarViewEndHour}
               isBusy={isBusy}
               isDropActive={activeDragType !== undefined}
-              onCancelBlock={onDelete}
+              onCancelBlock={(id) => void handleCancelBlock(id)}
             />
           </div>
         </div>
@@ -275,7 +290,7 @@ export function ScheduleDragPlanner({
           isSubmitting={isBusy}
           error={taskError}
           defaultEstimatedMinutes={defaultDurationMinutes}
-          onCreate={onAddTask}
+          onCreate={handleAddTask}
           onClose={() => setIsQuickTaskDialogOpen(false)}
         />
       )}
