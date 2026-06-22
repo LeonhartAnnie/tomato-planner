@@ -45,7 +45,7 @@ export function TasksPage() {
   return (
     <section>
       <h1>任務</h1>
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="error-message" role="alert">{error}</p>}
       {isLoading && <p role="status">處理中…</p>}
 
       <div className="tasks-layout">

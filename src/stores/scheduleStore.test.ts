@@ -241,11 +241,14 @@ describe('scheduleStore', () => {
       .importGoogleCalendarEvents(gateway)
 
     expect(succeeded).toBe(false)
-    expect(useScheduleStore.getState().error).toBe('Google unavailable')
+    expect(useScheduleStore.getState().error).toBe(
+      '無法匯入 Google Calendar 行程，請確認授權與網路狀態。',
+    )
     expect(useScheduleStore.getState()).toMatchObject({
       calendarEvents: [calendarEvent],
       googleCalendarStatus: 'error',
-      googleCalendarError: 'Google unavailable',
+      googleCalendarError:
+        '無法匯入 Google Calendar 行程，請確認授權與網路狀態。',
     })
     expect(scheduleDexieRepository.setCalendarEvents).not.toHaveBeenCalled()
   })
@@ -272,9 +275,10 @@ describe('scheduleStore', () => {
 
   it('resets Google Calendar import status and error', () => {
     useScheduleStore.setState({
-      error: 'Authorization failed',
+      error: '無法匯入 Google Calendar 行程，請確認授權與網路狀態。',
       googleCalendarStatus: 'error',
-      googleCalendarError: 'Authorization failed',
+      googleCalendarError:
+        '無法匯入 Google Calendar 行程，請確認授權與網路狀態。',
       googleCalendarLastImportedAt: '2026-06-20T00:00:00.000Z',
     })
 

@@ -54,7 +54,7 @@ export function GoogleCalendarPanel() {
           尚未設定 VITE_GOOGLE_CLIENT_ID，請先完成環境變數設定。
         </p>
       )}
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="error-message" role="alert">{error}</p>}
 
       <div className="calendar-import-actions">
         <button

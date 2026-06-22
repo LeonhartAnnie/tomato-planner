@@ -70,7 +70,7 @@ export function SettingsForm({
         </label>
       ))}
 
-      {error && <p className="error-message settings-feedback">{error}</p>}
+      {error && <p className="error-message settings-feedback" role="alert">{error}</p>}
       {successMessage && (
         <p className="success-message settings-feedback">{successMessage}</p>
       )}

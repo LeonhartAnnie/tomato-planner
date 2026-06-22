@@ -4,6 +4,10 @@ import {
   createGoogleDriveSyncService,
   type GoogleDriveBackupService,
 } from '../infrastructure/sync/createGoogleDriveSyncService'
+import {
+  toUserFriendlyErrorMessage,
+  type UserErrorContext,
+} from '../utils/userFriendlyErrorMessage'
 
 export type SyncStoreStatus = 'idle' | 'syncing' | 'success' | 'error'
 export type SyncStoreAction = 'upload' | 'restore'
@@ -36,23 +40,11 @@ interface CompletedBackupAction {
   backupUpdatedAt: string
 }
 
-const POPUP_BLOCKED_MESSAGE =
-  'Google 授權視窗被瀏覽器阻擋。請允許此網站開啟彈出視窗，或直接點擊操作按鈕後重新授權。'
-
-const toSyncErrorMessage = (error: unknown): string => {
-  if (!(error instanceof Error)) {
-    return 'Backup operation failed'
-  }
-
-  return error.message.toLowerCase().includes('failed to open popup window')
-    ? POPUP_BLOCKED_MESSAGE
-    : error.message
-}
-
 export const useSyncStore = create<SyncStoreState>((set) => {
   const runBackupAction = async (
     service: GoogleDriveBackupService,
     operation: () => Promise<CompletedBackupAction>,
+    errorContext: UserErrorContext,
   ): Promise<boolean> => {
     set({ status: 'syncing', error: undefined })
     try {
@@ -67,7 +59,10 @@ export const useSyncStore = create<SyncStoreState>((set) => {
       })
       return true
     } catch (error: unknown) {
-      set({ status: 'error', error: toSyncErrorMessage(error) })
+      set({
+        status: 'error',
+        error: toUserFriendlyErrorMessage(error, errorContext),
+      })
       return false
     }
   }
@@ -94,7 +89,7 @@ export const useSyncStore = create<SyncStoreState>((set) => {
       } catch (error: unknown) {
         set({
           summaryStatus: 'error',
-          summaryError: toSyncErrorMessage(error),
+          summaryError: toUserFriendlyErrorMessage(error),
         })
         return false
       }
@@ -112,7 +107,10 @@ export const useSyncStore = create<SyncStoreState>((set) => {
       } catch (error: unknown) {
         set({
           summaryStatus: 'error',
-          summaryError: toSyncErrorMessage(error),
+          summaryError: toUserFriendlyErrorMessage(
+            error,
+            'google-drive-read',
+          ),
         })
         return false
       }
@@ -126,7 +124,7 @@ export const useSyncStore = create<SyncStoreState>((set) => {
           syncedAt: result.uploadedAt,
           backupUpdatedAt: result.backupUpdatedAt,
         }
-      }),
+      }, 'google-drive-write'),
 
     restoreCloudBackup: (service = createGoogleDriveSyncService()) =>
       runBackupAction(service, async () => {
@@ -136,7 +134,7 @@ export const useSyncStore = create<SyncStoreState>((set) => {
           syncedAt: result.restoredAt,
           backupUpdatedAt: result.backupUpdatedAt,
         }
-      }),
+      }, 'google-drive-read'),
 
     resetSyncState: () => set({ status: 'idle', error: undefined }),
   }

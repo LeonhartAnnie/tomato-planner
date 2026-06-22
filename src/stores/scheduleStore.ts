@@ -12,6 +12,7 @@ import { googleCalendarGateway } from '../infrastructure/google/googleCalendarGa
 import type { CalendarEvent, ScheduledBlock } from '../types'
 import { addDaysIso, nowIso, startOfDayIso } from '../utils/dateTime'
 import { toErrorMessage } from '../utils/error'
+import { toUserFriendlyErrorMessage } from '../utils/userFriendlyErrorMessage'
 
 export type GoogleCalendarImportStatus =
   | 'idle'
@@ -157,7 +158,10 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       })
       return true
     } catch (error: unknown) {
-      const errorMessage = toErrorMessage(error)
+      const errorMessage = toUserFriendlyErrorMessage(
+        error,
+        'google-calendar',
+      )
       set({
         error: errorMessage,
         googleCalendarStatus: 'error',

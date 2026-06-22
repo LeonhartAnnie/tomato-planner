@@ -31,7 +31,17 @@ h1 { margin-top: 0; }
 .next-step-panel { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 14px; border-radius: 8px; background: #fff1d6; }
 .next-step-panel p { margin: 0; }
 .next-step-panel button { padding: 9px 13px; border: 1px solid #a5372c; border-radius: 8px; color: white; background: #a5372c; cursor: pointer; }
-.error-message { color: #a31f17; }
+.error-message,
+.pending-drop-error,
+.backup-dialog-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid #c16a61;
+  border-radius: 7px;
+  color: #7c302a;
+  background: #fff4f2;
+  overflow-wrap: anywhere;
+}
 .recent-sessions { max-width: 520px; margin-top: 32px; }
 .recent-sessions ul { padding: 0; list-style: none; }
 .recent-sessions li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid #edc9bd; }
@@ -185,7 +195,6 @@ h1 { margin-top: 0; }
 .schedule-dialog-time-field input { width: 180px; max-width: 100%; padding: 10px; border: 1px solid #cdbbb4; border-radius: 8px; font: inherit; }
 .schedule-dialog-preview { margin: 0; color: #4f403a; }
 .time-grid-prefill-note { margin: 0; padding: 9px 11px; border-radius: 7px; color: #315f99; background: #eaf2ff; font-size: 0.88rem; }
-.pending-drop-error { margin: 0; padding: 10px 12px; border-left: 3px solid #b94b3f; border-radius: 6px; color: #8c231c; background: #fff1ef; }
 .schedule-dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .schedule-dialog-actions button { padding: 9px 13px; border: 1px solid #c24132; border-radius: 8px; color: white; background: #c24132; cursor: pointer; }
 .schedule-dialog-actions button:disabled { cursor: not-allowed; opacity: 0.55; }
@@ -235,7 +244,6 @@ h1 { margin-top: 0; }
 .backup-summary-card dt { color: #645d59; }
 .backup-summary-card dd { margin: 0; text-align: right; }
 .backup-empty-state { grid-column: span 1; margin: 0; padding: 15px; border: 1px dashed #8aa4c8; border-radius: 10px; color: #315f99; background: #f4f8ff; }
-.backup-dialog-error { margin: 0; padding: 10px 12px; border-radius: 7px; color: #8c231c; background: #fff1ef; }
 .backup-dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .backup-dialog-actions button { padding: 10px 14px; border-radius: 8px; cursor: pointer; }
 .backup-dialog-actions button:disabled { cursor: not-allowed; opacity: 0.55; }

@@ -1,117 +1,95 @@
 # Tomato Planner
 
-React、Vite 與 TypeScript 建立的 PWA 番茄鐘排程工具。資料預設儲存在本機
-IndexedDB；Google Calendar 僅供唯讀匯入，Google Drive 提供手動備份與還原。
+Tomato Planner 是使用 React、Vite 與 TypeScript 建立的 PWA 番茄鐘排程工具。
+Task、Schedule、Settings 與 PomodoroSession 儲存在本機 IndexedDB；Google
+Calendar 僅供唯讀匯入，Google Drive 僅提供明確的手動備份與還原。
 
-## 本機啟動
+## 功能總覽
 
-需求：Node.js 與 npm。
+- **Task**：建立、編輯與刪除任務，記錄預估時間、分類、地點與期限。
+- **Schedule**：手動建立排程，或拖曳 Task／ScheduledBlock 到日期或時間格線。
+- **Time grid**：顯示未來 7 天，支援跨日事件切割與時間衝突標記。
+- **Pomodoro**：Focus、Pause、Resume、Complete，以及短／長休息建議。
+- **Google Calendar**：唯讀匯入未來 7 天行程；外部行程不可編輯或拖曳。
+- **Google Drive**：使用 `appDataFolder` 手動上傳本機備份或還原雲端備份。
+- **PWA**：提供 web manifest 與 service worker production build。
 
-1. 安裝依賴：
+## 快速開始
 
-   ```bash
-   npm install
-   ```
+需求：Node.js 與 npm。本專案不使用 pnpm。
 
-2. 複製環境變數範本：
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-   ```bash
-   cp .env.example .env.local
-   ```
+PowerShell 可使用：
 
-   PowerShell 也可使用：
+```powershell
+Copy-Item .env.example .env.local
+```
 
-   ```powershell
-   Copy-Item .env.example .env.local
-   ```
+測試與 production build：
 
-3. 在 `.env.local` 填入 Google OAuth Web Client ID：
+```bash
+npm run test:run
+npm run build
+npm run preview
+```
 
-   ```bash
-   VITE_GOOGLE_CLIENT_ID=你的_Google_OAuth_Client_ID
-   ```
+`npm run preview` 用於檢查 `dist`，不取代正式部署。
 
-   Calendar 與 Drive 共用同一個 Web Client ID。`.env.local` 包含本機設定，已由
-   `.gitignore` 排除，不應 commit。
+## 環境變數
 
-4. 啟動開發環境：
+在 `.env.local` 設定 Google OAuth Web Client ID：
 
-   ```bash
-   npm run dev
-   ```
+```dotenv
+VITE_GOOGLE_CLIENT_ID=你的_Google_OAuth_Client_ID
+```
 
-5. 執行測試與正式建置：
-
-   ```bash
-   npm run test:run
-   npm run build
-   npm run preview
-   ```
-
-`npm run preview` 用於檢查 `dist` 的 production build，不取代正式部署。
+- Calendar 與 Drive 共用同一個 OAuth Client ID。
+- `.env.example` 應提交至版本控制，提供必要變數名稱。
+- `.env.local` 含本機設定，已由 `.gitignore` 排除，不應 commit。
+- Google access token 只保留在記憶體，不寫入 localStorage 或備份。
 
 ## Google Cloud Console 設定
 
-1. 啟用 Google Calendar API。
-2. 啟用 Google Drive API。
-3. 設定 OAuth consent screen；Testing 狀態下將實機測試帳號加入 Test users。
-4. 建立 OAuth Client ID，Application type 選擇 Web application。
-5. 在 Authorized JavaScript origins 加入實際前端 origin。本機 Vite 預設為：
+1. 啟用 Google Calendar API 與 Google Drive API。
+2. 設定 OAuth consent screen；Testing 狀態下加入 Test users。
+3. 建立 Web application 類型的 OAuth Client ID。
+4. 在 Authorized JavaScript origins 加入前端 origin，例如：
 
    ```text
    http://localhost:5173
    ```
 
-   正式環境需加入實際 HTTPS origin。協定、網域與連接埠必須和瀏覽器開啟的網址
-   完全一致。
-
-### OAuth scopes
+   協定、網域與連接埠必須和瀏覽器網址完全一致；正式環境需加入實際 HTTPS origin。
 
 目前只使用以下最小 scopes：
 
-- Google Calendar：`https://www.googleapis.com/auth/calendar.readonly`
-  - 讀取 primary calendar 未來 7 天事件。
-- Google Drive：`https://www.googleapis.com/auth/drive.appdata`
-  - 在應用程式專屬 `appDataFolder` 讀寫備份檔。
+- Calendar：`https://www.googleapis.com/auth/calendar.readonly`
+- Drive：`https://www.googleapis.com/auth/drive.appdata`
 
-專案不使用 `https://www.googleapis.com/auth/drive` full Drive scope，也不會新增、
-修改或刪除 Google Calendar 行程。
+專案不使用 full Drive scope `https://www.googleapis.com/auth/drive`。
 
-## MVP 功能範圍
+## Google Calendar 行為
 
-目前包含：
+- 只讀取 primary calendar 未來 7 天行程。
+- CalendarEvent 在 UI 中維持 readonly，不提供 Edit、Delete 或拖曳修改。
+- 「清除外部行程」只刪除本機匯入資料，不會改動 Google Calendar。
+- Google Calendar 行程不會寫入 Google Drive 備份。
 
-- 本機 Task CRUD。
-- 手動 Schedule 與未來 7 天排程視圖。
-- Google Calendar read-only 匯入與 CalendarEvent readonly 顯示。
-- 本機排程與外部事件的時間衝突標記。
-- Pomodoro focus、short break、long break 基本循環。
-- 番茄鐘與排程顯示 Settings。
-- Google Drive appDataFolder 覆蓋式手動備份與還原。
+## Google Drive 備份與還原
 
-目前不包含：
+- **上傳本機備份**：以目前本機 app-owned data 完整覆蓋雲端備份。
+- **從雲端還原**：以雲端備份完整覆蓋目前裝置的本機資料。
+- 操作前會顯示本機與雲端摘要、資料時間及覆蓋警告。
+- 沒有雲端備份時可以建立新備份，但不能執行還原。
+- 沒有自動 LWW sync、自動合併或背景同步。
+- Cloud backup 使用經 runtime validation 的 `CloudBackupData` version 1。
 
-- Google Calendar 寫入。
-- 自動排程。
-- 拖曳排程。
-- 自動或背景同步。
-- 自動合併或自動 LWW 同步 UI。
-- CalendarEvent 同步到 Google Drive。
-- activeTimer 跨裝置同步。
-
-## Google Calendar 本機資料
-
-Schedule 頁面的「清除外部行程」只清除本機 IndexedDB 中匯入的
-`CalendarEvent`，不會刪除或修改 Google Calendar 上的事件。CalendarEvent 在 UI
-維持 readonly。
-
-## Google Drive 備份架構
-
-Cloud backup JSON 目前使用 `CloudBackupData` version 1。Drive 讀取的文字必須依序
-通過 JSON parsing、version migration 與 runtime validation，格式錯誤、含禁止同步
-欄位或不支援版本的備份不會匯入本機。
-
-Production 組合路徑：
+資料路徑：
 
 ```text
 LocalAppDataDexieRepository
@@ -121,185 +99,101 @@ LocalAppDataDexieRepository
   → Google Drive appDataFolder
 ```
 
-`GoogleDriveCloudBackupTextStorage` 只處理 appDataFolder 的 string I/O；
-`CloudBackupJsonRepository` 負責 JSON codec 與 validation；application use cases
-負責明確的上傳或還原；Dexie adapter 負責本機 transaction。
+Drive adapter 只處理 string I/O；JSON repository 負責 codec 與 validation；application
+use cases 負責上傳／還原流程；Dexie adapter 負責本機 transaction。UI 只呼叫 store。
 
-`CloudBackupData.updatedAt` 代表 app-owned data 的最後修改時間，不代表同步按鈕的
-點擊時間。它取 Task／ScheduledBlock 的最新 `updatedAt`，以及 PomodoroSession 的
-`endedAt`（沒有時使用 `startedAt`）；沒有可用內容時間時使用 Unix epoch。
-`uploadedAt`／`restoredAt` 代表本次操作時間。既有 `syncWithCloudBackup` 與 LWW
-邏輯保留在 application 層供後續演進，但不再作為 MVP UI 的主要操作。
+## 不會同步的資料
 
-目前 Settings model 沒有 `updatedAt`，因此只有 Settings 發生變更時，無法精準推進
-backup 的內容修改時間。相同限制也適用於沒有保留 tombstone／獨立修改 metadata 的
-純刪除操作；後續應以 app-level data revision metadata 補齊，而不是把同步時間重新
-當成內容修改時間。
+- Google Calendar 的 CalendarEvent。
+- 進行中的 activeTimer、nextStep 與 lastCompletedSession。
+- Google access token。
+- Dialog、loading、error 等 UI 暫存狀態。
 
-Settings 頁面的 SyncPanel 只讀取 `syncStore`，提供兩個方向：
+## 目前限制
 
-- 「上傳本機備份」：用目前本機 Task、Schedule、Settings 與 PomodoroSession
-  完整覆蓋 Google Drive 備份。刪除本機資料後使用此操作，可將刪除結果保存到雲端。
-- 「從雲端還原」：用 Google Drive 備份完整覆蓋目前裝置的本機 app-owned data。
+- Google Calendar 不支援寫入。
+- Google Drive 不是自動同步，也不會合併兩端變更。
+- activeTimer 重新整理或跨裝置後不會恢復。
+- 沒有多人協作或 conflict merge。
+- Settings 沒有 `updatedAt`；settings-only change 的內容時間精準度有限。
+- 純刪除尚未使用 tombstone 或 app-level revision metadata。
 
-兩個操作都不會自動合併，執行前必須確認。UI 不直接操作 token、Drive API、JSON
-codec、repositories、Dexie 或 application use case。備份不包含 CalendarEvent、
-activeTimer、nextStep 或 lastCompletedSession。未來若要恢復可靠的智慧同步，必須先
-加入 app-level revision metadata 與 deletion tombstone。
+## 版本歷程
 
-上傳或還原前會讀取本機與雲端備份摘要，顯示任務、排程、番茄鐘紀錄數量及資料
-時間。摘要只包含 `CloudBackupData` v1 已定義的 app-owned data，不會讀取
-CalendarEvent 或 activeTimer。使用者必須在安全確認 dialog 中再次確認，才會執行
-覆蓋操作；摘要或 Google 授權載入失敗時不會執行上傳或還原。
+- **v1.0.0**：Task、Schedule、Pomodoro、Settings、Calendar read-only、Drive 備份基礎。
+- **v2.1**：Task 拖曳到日期建立排程。
+- **v2.2**：ScheduledBlock 拖曳重新排程。
+- **v2.3**：Schedule 互動提示與空狀態改善。
+- **v2.4**：7 天時間格線視圖。
+- **v2.4.1**：時間格線捲動與跨日事件切割。
+- **v2.5**：拖曳到時間格線並預填時間。
+- **v2.6**：建立／重新排程確認 dialog。
+- **v2.7**：Drive 上傳／還原摘要與覆蓋安全提示。
+- **v2.8**：使用者友善錯誤訊息與 release 文件整理。
 
 ## Manual QA Checklist
 
-### Task
+### Task 與 Schedule
 
-- [ ] 新增任務並確認重新整理後仍存在。
-- [ ] 修改任務並確認資料更新。
-- [ ] 刪除任務並確認清單移除。
+- [ ] Task 新增、修改與刪除後，重新整理資料仍正確。
+- [ ] 手動建立及刪除 ScheduledBlock 正常。
+- [ ] Task 拖到日期或時間格線後，確認 dialog 的日期與時間正確。
+- [ ] ScheduledBlock 重新排程後保留 duration；取消或 Esc 不修改資料。
+- [ ] 與本機排程或 CalendarEvent 重疊時顯示友善衝突訊息。
+- [ ] 時間格線可顯示 7 天、跨日事件及 Settings 設定的起訖時間。
+- [ ] 小螢幕可水平及垂直捲動時間格線。
 
-### Schedule
+### Pomodoro 與 Settings
 
-- [ ] 選擇任務並建立手動排程。
-- [ ] 將未排程 Task 拖到日期並輸入開始時間，確認可建立排程。
-- [ ] 將既有 ScheduledBlock 拖到另一日，輸入新時間後確認更新成功。
-- [ ] 取消 pending reschedule 後，原排程日期與時間不變。
-- [ ] 重新排程若與其他 ScheduledBlock 衝突，會被阻擋並顯示錯誤。
-- [ ] 重新排程若與 CalendarEvent 衝突，會依既有規則被阻擋。
-- [ ] CalendarEvent 維持 readonly 且不可拖曳。
-- [ ] 重新排程後仍可從 ScheduledBlock 執行 Start Focus。
-- [ ] 衝突排程會被阻擋，或在既有顯示項目上標記時間衝突。
-- [ ] 刪除排程。
-- [ ] 未來 7 天視圖日期、排序及空日期正常顯示。
-
-### Pomodoro
-
-- [ ] 從 ScheduledBlock 開始 Focus。
-- [ ] Pause 與 Resume 正常。
-- [ ] Complete Focus 後建立 completed session。
-- [ ] 正確顯示 Short Break 或 Long Break 建議。
-- [ ] 手動 Start Break。
-- [ ] Complete Break 後顯示下一輪 Focus 提示。
+- [ ] 從 ScheduledBlock 開始 Focus，Pause／Resume／Complete 正常。
+- [ ] Focus 完成後顯示正確的短／長休息建議，並可完成休息。
+- [ ] Settings 可儲存、驗證錯誤與恢復預設值。
 
 ### Google Calendar
 
-- [ ] 未設定 Client ID 時顯示環境設定提示。
-- [ ] 設定 Client ID 後可完成 Google 授權。
-- [ ] 匯入未來 7 天事件。
-- [ ] 外部事件維持 readonly，沒有 Edit 或 Delete 操作。
-- [ ] 外部事件與本機排程重疊時顯示時間衝突。
+- [ ] 未設定 Client ID 時顯示設定提示。
+- [ ] 授權後可匯入未來 7 天行程。
+- [ ] 外部行程 readonly、不可拖曳，並可顯示時間衝突。
+- [ ] 清除外部行程不會刪除 Google Calendar 上的事件。
 
-### Google Drive Backup / Restore
+### Google Drive
 
-- [ ] 未設定 Client ID 時顯示提示，且備份／還原按鈕不可用。
-- [ ] 取消上傳確認時不執行操作。
-- [ ] 「上傳本機備份」會覆蓋 Google Drive appDataFolder 備份。
-- [ ] A 刪除資料後上傳，B 從雲端還原後該資料仍維持刪除。
-- [ ] 取消還原確認時不執行操作。
-- [ ] 「從雲端還原」會覆蓋目前本機資料。
-- [ ] 雲端沒有備份時顯示可讀錯誤。
-- [ ] CalendarEvent 不會寫入備份。
-- [ ] activeTimer 不會寫入備份。
-- [ ] 上傳並還原備份後，重新排程的 ScheduledBlock 日期與時間仍存在。
-
-### v2.3 Schedule UI polish
-
-- [ ] 拖曳 Task 時，所有日期 drop area 顯示可放置狀態，hover 日期明顯高亮。
-- [ ] 拖曳 ScheduledBlock 時，日期 drop area 同樣顯示提示與高亮。
-- [ ] CalendarEvent 顯示「外部行程，唯讀」，且不可拖曳。
-- [ ] Pending create 顯示任務名稱、日期、預估時間與開始時間欄位。
-- [ ] Pending reschedule 顯示排程名稱、原本時間、保留 duration 與新開始時間欄位。
-- [ ] 衝突錯誤在 pending panel 內清楚顯示。
-- [ ] 無可拖曳 Task 與空日期的提示文案正常。
-- [ ] Task drag create 與 ScheduledBlock drag reschedule 仍可完成。
-- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
-
-### v2.4 Schedule time grid view
-
-- [ ] 時間格線視圖顯示未來 7 天及 Settings 設定的起訖時間。
-- [ ] ScheduledBlock 依開始與結束時間落在正確位置。
-- [ ] CalendarEvent 依時間顯示，並保有「外部行程，唯讀」標籤。
-- [ ] 部分或完全超出顯示範圍的事件不會造成版面破損。
-- [ ] 小螢幕可水平捲動時間格線。
-- [ ] Task drag create 與 ScheduledBlock drag reschedule 仍正常。
-- [ ] 既有週排程清單的 Start Focus 仍正常。
-- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
-
-### v2.4.1 Time grid and Schedule layout fixes
-
-- [ ] 小螢幕可水平及垂直捲動時間格線，並能到達設定的 endHour。
-- [ ] `calendarViewEndHour = 24` 時可看到 24:00 最後一列。
-- [ ] 跨天 ScheduledBlock 會切割顯示在對應的多個日期欄位。
-- [ ] 跨天 CalendarEvent 同樣切割顯示，且維持「外部行程，唯讀」。
-- [ ] 拖曳排程、手動排程、週清單、時間格線及 Google Calendar 區塊皆可使用。
-- [ ] Task drag create 與 ScheduledBlock drag reschedule 仍正常。
-- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
-
-### v2.5 Time grid drop scheduling
-
-- [ ] 將 Task 拖到時間格線 09:00 附近，pending create 預填最近的 15 分鐘時段。
-- [ ] 手動修改預填時間後可成功建立排程。
-- [ ] 將 ScheduledBlock 拖到時間格線 14:00 附近，pending reschedule 正確預填。
-- [ ] 取消 pending 後不建立或修改資料。
-- [ ] Drop 到格線底部不會產生 24:00 開始時間。
-- [ ] 修改 Settings 顯示起訖時間後，drop 換算仍正確。
-- [ ] CalendarEvent 維持 readonly 且不可拖曳。
-- [ ] 舊有 drop 到日期後手動輸入時間的流程仍正常。
-- [ ] Task create、Block reschedule、Start Focus、Calendar、Drive 與 Pomodoro 回歸正常。
-
-### v2.6 Schedule interaction UX cleanup
-
-- [ ] 拖 Task 到日期後立即顯示「建立排程」dialog。
-- [ ] 拖 Task 到時間格線後 dialog 立即顯示且開始時間已預填。
-- [ ] 拖 ScheduledBlock 到日期後立即顯示「重新排程」dialog。
-- [ ] 拖 ScheduledBlock 到時間格線後 dialog 顯示且新時間已預填。
-- [ ] 按取消或 Esc 關閉 dialog 時不修改資料。
-- [ ] 發生時間衝突時 dialog 保持開啟並顯示錯誤。
-- [ ] 成功後 dialog 關閉並顯示簡短成功訊息。
-- [ ] 小螢幕 dialog 內容可捲動且按鈕可操作。
-- [ ] 手動排程、週排程清單與 Google Calendar panel 仍可使用。
-- [ ] Google Calendar、Google Drive 與 Pomodoro 行為未受影響。
-
-### v2.7 Google Drive backup / restore safety UX
-
-- [ ] 上傳前顯示本機摘要與「覆蓋雲端」警告。
-- [ ] 雲端已有備份時，上傳 dialog 同時顯示雲端摘要。
-- [ ] 雲端沒有備份時，上傳 dialog 顯示將建立新備份。
-- [ ] 還原前顯示雲端摘要、本機摘要與「覆蓋本機」警告。
-- [ ] 雲端沒有備份時不開啟還原 dialog，並顯示明確提示。
-- [ ] 取消 dialog 不執行上傳或還原。
-- [ ] Google 授權或摘要載入失敗時不執行覆蓋操作。
-- [ ] 上傳／還原失敗時 dialog 保持開啟並顯示錯誤。
-- [ ] 上傳／還原成功後 dialog 關閉，狀態與備份資料時間更新。
-- [ ] 小螢幕 dialog 可捲動且操作按鈕可使用。
-- [ ] Google Calendar、Schedule 與 Pomodoro 行為未受影響。
+- [ ] 上傳前顯示本機／雲端摘要與覆蓋雲端警告。
+- [ ] 還原前顯示雲端／本機摘要與覆蓋本機警告。
+- [ ] 無雲端備份時顯示友善提示且不執行還原。
+- [ ] 取消安全 dialog 不執行資料操作。
+- [ ] 授權、網路、Drive 讀寫及無效備份錯誤均顯示友善訊息。
+- [ ] 上傳／還原成功後狀態與備份資料時間更新。
+- [ ] CalendarEvent、activeTimer 與 token 不會進入備份。
 
 ### Build
 
 - [ ] `npm run test:run` 全部通過。
-- [ ] `npm run build` 成功。
-- [ ] `dist` 包含 production assets、web manifest 與 service worker。
+- [ ] `npm run build` 成功並產生 PWA assets。
 - [ ] `npm run preview` 可開啟 production build。
 
 ## Troubleshooting
 
-### Google Drive 備份或還原顯示 `Failed to open popup window`
+### Google 授權 popup 被擋
 
-可能原因：
+允許目前網站開啟彈出視窗，再直接點擊 Calendar 匯入、備份或還原按鈕。隱私模式
+及追蹤防護也可能阻擋登入視窗。
 
-- 瀏覽器封鎖 Google 授權 popup。
-- 授權要求未能在使用者點擊操作按鈕後立即觸發。
-- 隱私模式、追蹤防護或瀏覽器設定阻擋第三方登入視窗。
+### 網路連線失敗／Failed to fetch
 
-處理方式：
+確認網路狀態、Google API 是否啟用，稍後重新操作。應用程式會顯示友善訊息，不會
+直接呈現底層 response 或 JSON 內容。
 
-1. 允許 `http://localhost:5173` 開啟彈出視窗。
-2. 重新點擊「上傳本機備份」或「從雲端還原」，讓授權在使用者操作中重新觸發。
-3. 確認使用 `http://localhost:5173`，不要使用 `file://` 開啟應用程式。
-4. 確認 `.env.local` 已設定有效的 `VITE_GOOGLE_CLIENT_ID`。
-5. 確認該 origin 已加入 OAuth Client 的 Authorized JavaScript origins。
+### 沒有雲端備份
 
-Drive 授權 token 只保存在目前頁面的記憶體，未寫入 localStorage；頁面重新載入或
-token 過期後，需要由使用者再次點擊備份或還原按鈕授權。
+先在 Settings 的 Google Drive 區塊執行「上傳本機備份」，成功後才能從雲端還原。
+
+### Google Client ID 未設定
+
+確認 `.env.local` 存在且包含有效的 `VITE_GOOGLE_CLIENT_ID`，修改後重新啟動
+`npm run dev`。
+
+### localhost origin 不一致
+
+瀏覽器網址必須和 Authorized JavaScript origins 完全一致。例如設定
+`http://localhost:5173` 時，不要使用 `file://`、不同 port 或未登記的 IP origin。

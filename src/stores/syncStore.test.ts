@@ -102,7 +102,7 @@ describe('syncStore backup summaries', () => {
     expect(service.getCloudBackupSummary).not.toHaveBeenCalled()
     expect(useSyncStore.getState()).toMatchObject({
       summaryStatus: 'error',
-      summaryError: 'Authorization denied',
+      summaryError: '無法讀取 Google Drive 備份，請稍後再試。',
     })
   })
 
@@ -120,7 +120,7 @@ describe('syncStore backup summaries', () => {
     expect(service.restoreCloudBackup).not.toHaveBeenCalled()
     expect(useSyncStore.getState()).toMatchObject({
       summaryStatus: 'error',
-      summaryError: 'Local summary failed',
+      summaryError: '操作失敗，請稍後再試。',
     })
   })
 })
@@ -195,7 +195,7 @@ describe('syncStore manual backup actions', () => {
     expect(service.uploadLocalBackup).not.toHaveBeenCalled()
     expect(useSyncStore.getState()).toMatchObject({
       status: 'error',
-      error: 'Authorization denied',
+      error: '無法寫入 Google Drive 備份，請確認網路狀態與 Google 授權後再試。',
     })
   })
 
@@ -227,7 +227,7 @@ describe('syncStore manual backup actions', () => {
 
     expect(useSyncStore.getState()).toMatchObject({
       status: 'error',
-      error: 'Upload failed',
+      error: '無法寫入 Google Drive 備份，請確認網路狀態與 Google 授權後再試。',
       lastAction: 'restore',
       lastSyncedAt: restoreResult.restoredAt,
       lastBackupUpdatedAt: restoreResult.backupUpdatedAt,
@@ -246,7 +246,7 @@ describe('syncStore manual backup actions', () => {
 
     expect(useSyncStore.getState()).toMatchObject({
       status: 'error',
-      error: 'Restore failed',
+      error: '無法讀取 Google Drive 備份，請稍後再試。',
     })
   })
 

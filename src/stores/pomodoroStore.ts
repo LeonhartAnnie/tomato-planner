@@ -79,7 +79,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       activeTimer?.status === 'running' ||
       activeTimer?.status === 'paused'
     ) {
-      set({ error: 'Complete or clear the active timer before starting another' })
+      set({ error: '請先完成目前的番茄鐘，再開始新的計時。' })
       return false
     }
 
@@ -99,7 +99,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   pauseTimer: (now) => {
     const timer = get().activeTimer
     if (!timer) {
-      set({ error: 'No active Pomodoro timer' })
+      set({ error: '目前沒有進行中的番茄鐘。' })
       return
     }
 
@@ -113,7 +113,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   resumeTimer: (now) => {
     const timer = get().activeTimer
     if (!timer) {
-      set({ error: 'No active Pomodoro timer' })
+      set({ error: '目前沒有進行中的番茄鐘。' })
       return
     }
 
@@ -127,7 +127,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   completeTimer: async (now) => {
     const timer = get().activeTimer
     if (!timer) {
-      set({ error: 'No active Pomodoro timer' })
+      set({ error: '目前沒有進行中的番茄鐘。' })
       return
     }
 
@@ -160,15 +160,15 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   startBreakFromNextStep: () => {
     const { activeTimer, lastCompletedSession, nextStep } = get()
     if (!nextStep) {
-      set({ error: 'No suggested Pomodoro step is available' })
+      set({ error: '目前沒有可開始的下一段番茄鐘。' })
       return false
     }
     if (nextStep.nextType === 'focus') {
-      set({ error: 'The next suggested step is focus, not a break' })
+      set({ error: '下一段建議是專注，不是休息。' })
       return false
     }
     if (activeTimer?.status === 'running' || activeTimer?.status === 'paused') {
-      set({ error: 'Complete or clear the active timer before starting another' })
+      set({ error: '請先完成目前的番茄鐘，再開始新的計時。' })
       return false
     }
 
