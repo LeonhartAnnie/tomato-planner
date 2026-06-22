@@ -12,6 +12,7 @@ export default defineConfig({
         name: 'Tomato Planner',
         short_name: 'Tomato',
         description: '番茄鐘排程工具',
+        lang: 'zh-TW',
         theme_color: '#c24132',
         background_color: '#fff8f2',
         display: 'standalone',
