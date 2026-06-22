@@ -1,9 +1,8 @@
-import { useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { usePomodoroStore } from '../../../stores/pomodoroStore'
-import { useSettingsStore } from '../../../stores/settingsStore'
 import type { ScheduledBlock } from '../../../types'
 import { formatScheduleTimeRange } from '../selectors/scheduleDisplaySelectors'
+import { getTaskCategoryPresentation } from '../../tasks/selectors/taskCategoryPresentation'
+import { ScheduledBlockFocusControl } from './ScheduledBlockFocusControl'
 
 interface ScheduleBlockListItemProps {
   block: ScheduledBlock
@@ -12,6 +11,7 @@ interface ScheduleBlockListItemProps {
   isConflicting?: boolean
   conflictNotice?: ReactNode
   dragHandle?: ReactNode
+  category?: string
 }
 
 export function ScheduleBlockListItem({
@@ -21,19 +21,9 @@ export function ScheduleBlockListItem({
   isConflicting = false,
   conflictNotice,
   dragHandle,
+  category,
 }: ScheduleBlockListItemProps) {
-  const navigate = useNavigate()
-  const workMinutes = useSettingsStore((state) => state.settings.workMinutes)
-  const startFocusForScheduledBlock = usePomodoroStore(
-    (state) => state.startFocusForScheduledBlock,
-  )
-
-  const handleStartFocus = () => {
-    if (startFocusForScheduledBlock(block, workMinutes)) {
-      navigate('/pomodoro')
-    }
-  }
-
+  const categoryPresentation = getTaskCategoryPresentation(category)
   return (
     <li
       className={`schedule-block-item${
@@ -43,6 +33,11 @@ export function ScheduleBlockListItem({
       <div>
         {dragHandle}
         <h3>{block.title}</h3>
+        <span
+          className={`task-category-badge ${categoryPresentation.cssClassName}`}
+        >
+          {categoryPresentation.label}
+        </span>
         {conflictNotice}
         <dl className="schedule-block-details">
           <div>
@@ -60,16 +55,14 @@ export function ScheduleBlockListItem({
         </dl>
       </div>
       <div className="schedule-block-actions">
-        <button type="button" disabled={isBusy} onClick={handleStartFocus}>
-          Start Focus
-        </button>
+        <ScheduledBlockFocusControl block={block} isBusy={isBusy} />
         <button
           type="button"
           className="danger"
           disabled={isBusy}
           onClick={() => onDelete(block.id)}
         >
-          Delete
+          取消排程
         </button>
       </div>
     </li>

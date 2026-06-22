@@ -1,10 +1,13 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import type { CSSProperties, ReactNode } from 'react'
-import type { CalendarEvent, ScheduledBlock } from '../../../types'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import type { CalendarEvent, ScheduledBlock, Task } from '../../../types'
+import {
+  getScheduledBlockCategoryPresentation,
+  type TaskCategoryPresentation,
+} from '../../tasks/selectors/taskCategoryPresentation'
 import {
   addConflictInfoToScheduleItems,
   createScheduleDisplayItems,
-  getNextSevenDays,
   type ScheduleDisplayItem,
 } from '../selectors/scheduleDisplaySelectors'
 import {
@@ -15,6 +18,12 @@ import {
   type TimeGridDailySegment,
   type TimeGridTick,
 } from '../selectors/scheduleTimeGridHelpers'
+import { ScheduledBlockFocusControl } from './ScheduledBlockFocusControl'
+import {
+  getTimeGridItemDisplayMode,
+  shouldShowTimeGridInlineActions,
+} from '../selectors/timeGridItemDisplay'
+import { TimeGridBlockActionsDialog } from './TimeGridBlockActionsDialog'
 
 interface TimeGridScheduleViewProps {
   blocks: ScheduledBlock[]
@@ -23,17 +32,26 @@ interface TimeGridScheduleViewProps {
   calendarViewEndHour: number
   isBusy: boolean
   isDropActive: boolean
+  tasks: Task[]
+  dateKeys: string[]
+  onCancelBlock: (id: string) => void
 }
 
 interface TimeGridSegmentEntry {
   item: ScheduleDisplayItem
   segment: TimeGridDailySegment
+  category?: TaskCategoryPresentation
 }
 
 interface TimeGridItemProps extends TimeGridSegmentEntry {
   calendarViewStartHour: number
   calendarViewEndHour: number
   isBusy: boolean
+  onCancelBlock: (id: string) => void
+  onOpenCompactActions: (
+    block: ScheduledBlock,
+    category: TaskCategoryPresentation,
+  ) => void
 }
 
 interface TimeGridDayColumnProps {
@@ -45,9 +63,14 @@ interface TimeGridDayColumnProps {
   calendarViewEndHour: number
   isBusy: boolean
   isDropActive: boolean
+  onCancelBlock: (id: string) => void
+  onOpenCompactActions: (
+    block: ScheduledBlock,
+    category: TaskCategoryPresentation,
+  ) => void
 }
 
-const PIXELS_PER_HOUR = 64
+const PIXELS_PER_HOUR = 60
 
 const getPositionStyle = (
   item: ScheduleDisplayItem,
@@ -75,19 +98,23 @@ const getPositionStyle = (
 function TimeGridEventContent({
   item,
   segment,
+  category,
 }: TimeGridSegmentEntry): ReactNode {
   const isExternal = item.kind === 'calendar_event'
   const isCrossDay =
     segment.continuesFromPreviousDay || segment.continuesIntoNextDay
 
   return (
-    <>
+    <div className="time-grid-event-content">
       <strong>{item.title}</strong>
       <time>{formatDailySegmentTimeRange(segment)}</time>
+      {category && (
+        <span className="task-category-badge">{category.label}</span>
+      )}
       {isCrossDay && <span>跨天</span>}
       {isExternal && <span>外部行程，唯讀</span>}
       {item.hasConflict && <span className="time-grid-conflict">時間衝突</span>}
-    </>
+    </div>
   )
 }
 
@@ -97,7 +124,13 @@ function DraggableTimeGridBlock({
   calendarViewStartHour,
   calendarViewEndHour,
   isBusy,
+  category,
+  onCancelBlock,
+  onOpenCompactActions,
 }: TimeGridItemProps) {
+  if (item.kind !== 'scheduled_block') {
+    return null
+  }
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `time-grid-scheduled-block-${item.id}-${segment.dateKey}`,
@@ -118,6 +151,18 @@ function DraggableTimeGridBlock({
   }
 
   const timeRange = formatDailySegmentTimeRange(segment)
+  const displayMode = getTimeGridItemDisplayMode(
+    segment.segmentStart,
+    segment.segmentEnd,
+  )
+  const showInlineActions = shouldShowTimeGridInlineActions(
+    item.kind,
+    displayMode,
+  )
+  const resolvedCategory = category ?? {
+    label: '其他',
+    cssClassName: 'category-other',
+  }
   const style: CSSProperties = {
     ...positionStyle,
     zIndex: isDragging ? 5 : positionStyle.zIndex,
@@ -127,20 +172,57 @@ function DraggableTimeGridBlock({
   }
 
   return (
-    <button
+    <article
       ref={setNodeRef}
-      type="button"
-      className={`time-grid-event time-grid-scheduled-block time-grid-draggable-event${
+      className={`time-grid-event time-grid-scheduled-block time-grid-draggable-event is-${displayMode} ${resolvedCategory.cssClassName}${
         item.hasConflict ? ' has-conflict' : ''
       }${isDragging ? ' is-dragging' : ''}`}
       style={style}
-      disabled={isBusy}
-      aria-label={`拖曳排程：${item.title}，${timeRange}`}
-      {...listeners}
-      {...attributes}
+      aria-label={`本機排程：${item.title}，${timeRange}`}
     >
-      <TimeGridEventContent item={item} segment={segment} />
-    </button>
+      <button
+        type="button"
+        className="time-grid-drag-handle"
+        disabled={isBusy}
+        aria-label={`拖曳排程：${item.title}，${timeRange}`}
+        {...listeners}
+        {...attributes}
+      >
+        拖曳
+      </button>
+      <TimeGridEventContent
+        item={item}
+        segment={segment}
+        category={resolvedCategory}
+      />
+      {showInlineActions ? (
+        <div className="time-grid-event-actions">
+          <ScheduledBlockFocusControl
+            block={item.block}
+            isBusy={isBusy}
+            compact
+          />
+          <button
+            type="button"
+            className="time-grid-cancel-button"
+            disabled={isBusy}
+            aria-label={`取消排程：${item.title}`}
+            onClick={() => onCancelBlock(item.id)}
+          >
+            取消排程
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="time-grid-compact-actions-button"
+          disabled={isBusy}
+          onClick={() => onOpenCompactActions(item.block, resolvedCategory)}
+        >
+          操作
+        </button>
+      )}
+    </article>
   )
 }
 
@@ -166,9 +248,13 @@ function TimeGridItem(props: TimeGridItemProps) {
   }
 
   const timeRange = formatDailySegmentTimeRange(segment)
+  const displayMode = getTimeGridItemDisplayMode(
+    segment.segmentStart,
+    segment.segmentEnd,
+  )
   return (
     <article
-      className={`time-grid-event time-grid-calendar-event${
+      className={`time-grid-event time-grid-calendar-event is-${displayMode}${
         item.hasConflict ? ' has-conflict' : ''
       }`}
       style={positionStyle}
@@ -188,6 +274,8 @@ function TimeGridDayColumn({
   calendarViewEndHour,
   isBusy,
   isDropActive,
+  onCancelBlock,
+  onOpenCompactActions,
 }: TimeGridDayColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `time-grid-day-${dateKey}`,
@@ -215,7 +303,7 @@ function TimeGridDayColumn({
           style={{ top: `${tick.offsetPercent}%` }}
         />
       ))}
-      {entries.map(({ item, segment }) => (
+      {entries.map(({ item, segment, category }) => (
         <TimeGridItem
           key={`${item.kind}-${item.id}-${segment.dateKey}`}
           item={item}
@@ -223,6 +311,9 @@ function TimeGridDayColumn({
           calendarViewStartHour={calendarViewStartHour}
           calendarViewEndHour={calendarViewEndHour}
           isBusy={isBusy}
+          category={category}
+          onCancelBlock={onCancelBlock}
+          onOpenCompactActions={onOpenCompactActions}
         />
       ))}
     </div>
@@ -236,8 +327,14 @@ export function TimeGridScheduleView({
   calendarViewEndHour,
   isBusy,
   isDropActive,
+  tasks,
+  dateKeys,
+  onCancelBlock,
 }: TimeGridScheduleViewProps) {
-  const dateKeys = getNextSevenDays()
+  const [compactActions, setCompactActions] = useState<{
+    block: ScheduledBlock
+    category: TaskCategoryPresentation
+  }>()
   const items = addConflictInfoToScheduleItems(
     createScheduleDisplayItems(blocks, calendarEvents),
   )
@@ -251,7 +348,14 @@ export function TimeGridScheduleView({
       item.end,
       dateKeys,
     )) {
-      segmentedItemsByDate.get(segment.dateKey)?.push({ item, segment })
+      segmentedItemsByDate.get(segment.dateKey)?.push({
+        item,
+        segment,
+        category:
+          item.kind === 'scheduled_block'
+            ? getScheduledBlockCategoryPresentation(item.block, tasks)
+            : undefined,
+      })
     }
   }
 
@@ -273,14 +377,16 @@ export function TimeGridScheduleView({
   return (
     <section
       className="time-grid-schedule"
-      aria-label="未來七天時間格線視圖"
+      aria-label={`${dateKeys.length} 天時間格線視圖`}
     >
-      <h2>時間格線視圖</h2>
-      <p className="time-grid-help">
-        將任務或既有排程拖到日期欄中的時間位置，確認後才會儲存。
-      </p>
       <div className="time-grid-scroll">
-        <div className="time-grid-frame">
+        <div
+          className="time-grid-frame"
+          style={{
+            '--time-grid-day-count': dateKeys.length,
+            '--time-grid-min-width': `${70 + dateKeys.length * 140}px`,
+          } as CSSProperties}
+        >
           <div className="time-grid-header" aria-hidden="true">
             <div className="time-grid-corner">時間</div>
             {dateKeys.map((dateKey) => (
@@ -317,12 +423,25 @@ export function TimeGridScheduleView({
                   calendarViewEndHour={calendarViewEndHour}
                   isBusy={isBusy}
                   isDropActive={isDropActive}
+                  onCancelBlock={onCancelBlock}
+                  onOpenCompactActions={(block, category) =>
+                    setCompactActions({ block, category })
+                  }
                 />
               ))}
             </div>
           </div>
         </div>
       </div>
+      {compactActions && (
+        <TimeGridBlockActionsDialog
+          block={compactActions.block}
+          category={compactActions.category}
+          isBusy={isBusy}
+          onCancelSchedule={onCancelBlock}
+          onClose={() => setCompactActions(undefined)}
+        />
+      )}
     </section>
   )
 }

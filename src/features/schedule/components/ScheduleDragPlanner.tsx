@@ -3,26 +3,28 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CreateScheduledBlockInput } from '../../../application/schedule/createScheduledBlock'
+import type { CreateTaskInput } from '../../../application/tasks/createTask'
 import type { CalendarEvent, ScheduledBlock, Task } from '../../../types'
 import { toErrorMessage } from '../../../utils/error'
 import {
   createDroppedTaskTimeRange,
   createRescheduledBlockTimeRange,
 } from '../selectors/dragScheduleHelpers'
-import {
-  getNextSevenDays,
-  groupScheduleItemsByDate,
-} from '../selectors/scheduleDisplaySelectors'
 import { calculateTimeFromGridDrop } from '../selectors/scheduleTimeGridHelpers'
-import { DraggableTaskCard } from './DraggableTaskCard'
-import { DroppableScheduleDay } from './DroppableScheduleDay'
 import {
   ScheduleDropConfirmDialog,
   type ScheduleDropPending,
 } from './ScheduleDropConfirmDialog'
 import { TimeGridScheduleView } from './TimeGridScheduleView'
+import { ScheduleTaskTray } from './ScheduleTaskTray'
+import { ScheduleQuickTaskDialog } from './ScheduleQuickTaskDialog'
+import { ScheduleViewRangeControls } from './ScheduleViewRangeControls'
+import type {
+  ScheduleViewRange,
+  ScheduleViewRangeMode,
+} from '../selectors/scheduleViewRange'
 
 interface ScheduleDragPlannerProps {
   tasks: Task[]
@@ -36,6 +38,12 @@ interface ScheduleDragPlannerProps {
   onAdd: (input: CreateScheduledBlockInput) => Promise<boolean>
   onUpdate: (block: ScheduledBlock) => Promise<boolean>
   onDelete: (id: string) => void
+  onAddTask: (input: CreateTaskInput) => Promise<boolean>
+  taskError?: string | null
+  viewRange: ScheduleViewRange
+  onViewModeChange: (mode: ScheduleViewRangeMode) => void
+  onViewPrevious: () => void
+  onViewNext: () => void
 }
 
 type ActiveDragType = 'task' | 'scheduled-block'
@@ -62,22 +70,19 @@ export function ScheduleDragPlanner({
   onAdd,
   onUpdate,
   onDelete,
+  onAddTask,
+  taskError,
+  viewRange,
+  onViewModeChange,
+  onViewPrevious,
+  onViewNext,
 }: ScheduleDragPlannerProps) {
   const [pendingDrop, setPendingDrop] = useState<ScheduleDropPending>()
   const [formError, setFormError] = useState<string>()
   const [successMessage, setSuccessMessage] = useState<string>()
   const [showStoreError, setShowStoreError] = useState(false)
   const [activeDragType, setActiveDragType] = useState<ActiveDragType>()
-  const dateKeys = useMemo(() => getNextSevenDays(), [])
-  const dayGroups = groupScheduleItemsByDate(
-    blocks,
-    calendarEvents,
-    dateKeys,
-  )
-  const scheduledTaskIds = new Set(blocks.map((block) => block.taskId))
-  const unscheduledTasks = tasks.filter(
-    (task) => !scheduledTaskIds.has(task.id),
-  )
+  const [isQuickTaskDialogOpen, setIsQuickTaskDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!successMessage) {
@@ -237,65 +242,43 @@ export function ScheduleDragPlanner({
         onDragCancel={() => setActiveDragType(undefined)}
         onDragEnd={handleDragEnd}
       >
-        <TimeGridScheduleView
-          blocks={blocks}
-          calendarEvents={calendarEvents}
-          calendarViewStartHour={calendarViewStartHour}
-          calendarViewEndHour={calendarViewEndHour}
-          isBusy={isBusy}
-          isDropActive={activeDragType !== undefined}
-        />
-
-        <details className="schedule-section" open>
-          <summary>拖曳排程</summary>
-          <div className="schedule-section-content">
-            <section
-              className="drag-planner"
-              aria-labelledby="drag-planner-title"
-            >
-              <h2 id="drag-planner-title">拖曳排程</h2>
-              <p className="drag-planner-help">
-                可拖到日期後輸入時間，或直接拖到上方時間格線預填時間。
-              </p>
-
-              <div className="drag-planner-layout">
-                <section
-                  className="draggable-task-panel"
-                  aria-label="未排程任務"
-                >
-                  <h3>未排程任務</h3>
-                  {unscheduledTasks.length === 0 ? (
-                    <p>目前沒有可拖曳的任務。</p>
-                  ) : (
-                    <div className="draggable-task-list">
-                      {unscheduledTasks.map((task) => (
-                        <DraggableTaskCard
-                          key={task.id}
-                          task={task}
-                          disabled={isBusy}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <div className="droppable-day-list">
-                  {dayGroups.map((group) => (
-                    <DroppableScheduleDay
-                      key={group.dateKey}
-                      dateKey={group.dateKey}
-                      items={group.items}
-                      isBusy={isBusy}
-                      isDropActive={activeDragType !== undefined}
-                      onDelete={onDelete}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
+        <div className="schedule-primary-layout">
+          <ScheduleTaskTray
+            tasks={tasks}
+            isBusy={isBusy}
+            onAddTask={() => setIsQuickTaskDialogOpen(true)}
+          />
+          <div className="schedule-time-grid-column">
+            <ScheduleViewRangeControls
+              range={viewRange}
+              onModeChange={onViewModeChange}
+              onPrevious={onViewPrevious}
+              onNext={onViewNext}
+            />
+            <TimeGridScheduleView
+              tasks={tasks}
+              blocks={blocks}
+              calendarEvents={calendarEvents}
+              dateKeys={viewRange.dateKeys}
+              calendarViewStartHour={calendarViewStartHour}
+              calendarViewEndHour={calendarViewEndHour}
+              isBusy={isBusy}
+              isDropActive={activeDragType !== undefined}
+              onCancelBlock={onDelete}
+            />
           </div>
-        </details>
+        </div>
       </DndContext>
+
+      {isQuickTaskDialogOpen && (
+        <ScheduleQuickTaskDialog
+          isSubmitting={isBusy}
+          error={taskError}
+          defaultEstimatedMinutes={defaultDurationMinutes}
+          onCreate={onAddTask}
+          onClose={() => setIsQuickTaskDialogOpen(false)}
+        />
+      )}
 
       {successMessage && (
         <p className="schedule-success-message" role="status">

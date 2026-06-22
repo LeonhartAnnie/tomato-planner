@@ -28,6 +28,16 @@ const SettingsPage = lazy(() =>
     default: module.SettingsPage,
   })),
 )
+const PrivacyPage = lazy(() =>
+  import('../pages/PrivacyPage').then((module) => ({
+    default: module.PrivacyPage,
+  })),
+)
+const TermsPage = lazy(() =>
+  import('../pages/TermsPage').then((module) => ({
+    default: module.TermsPage,
+  })),
+)
 
 const withPageLoading = (page: ReactNode) => (
   <Suspense fallback={<PageLoading />}>{page}</Suspense>
@@ -43,6 +53,8 @@ export const router = createBrowserRouter([
       { path: 'schedule', element: withPageLoading(<SchedulePage />) },
       { path: 'pomodoro', element: withPageLoading(<PomodoroPage />) },
       { path: 'settings', element: withPageLoading(<SettingsPage />) },
+      { path: 'privacy', element: withPageLoading(<PrivacyPage />) },
+      { path: 'terms', element: withPageLoading(<TermsPage />) },
     ],
   },
 ])

@@ -83,25 +83,62 @@ describe('pomodoroStore', () => {
   it('starts a focus timer for a scheduled block without using Dexie', () => {
     const succeeded = usePomodoroStore
       .getState()
-      .startFocusForScheduledBlock(scheduledBlock, 25)
+      .startFocusForScheduledBlock(
+        scheduledBlock,
+        25,
+        '2026-06-21T01:10:00.000Z',
+      )
 
     expect(succeeded).toBe(true)
     expect(usePomodoroStore.getState().activeTimer).toMatchObject({
       taskId: scheduledBlock.taskId,
       scheduledBlockId: scheduledBlock.id,
       type: 'focus',
-      durationMinutes: 25,
+      durationMinutes: 60,
     })
     expect(pomodoroDexieRepository.addPomodoroSession).not.toHaveBeenCalled()
   })
 
-  it('sets an error when scheduled focus duration is invalid', () => {
+  it('rejects a scheduled block with an invalid time', () => {
     const succeeded = usePomodoroStore
       .getState()
-      .startFocusForScheduledBlock(scheduledBlock, 0)
+      .startFocusForScheduledBlock(
+        { ...scheduledBlock, end: scheduledBlock.start },
+        30,
+        scheduledBlock.start,
+      )
 
     expect(succeeded).toBe(false)
-    expect(usePomodoroStore.getState().error).toBeTruthy()
+    expect(usePomodoroStore.getState().activeTimer).toBeUndefined()
+    expect(usePomodoroStore.getState().error).toContain('此排程時間無效')
+  })
+
+  it('rejects a scheduled focus before the block starts', () => {
+    const succeeded = usePomodoroStore
+      .getState()
+      .startFocusForScheduledBlock(
+        scheduledBlock,
+        30,
+        '2026-06-21T00:59:00.000Z',
+      )
+
+    expect(succeeded).toBe(false)
+    expect(usePomodoroStore.getState().activeTimer).toBeUndefined()
+    expect(usePomodoroStore.getState().error).toContain('此排程尚未開始')
+  })
+
+  it('rejects a scheduled focus after the block ends', () => {
+    const succeeded = usePomodoroStore
+      .getState()
+      .startFocusForScheduledBlock(
+        scheduledBlock,
+        30,
+        scheduledBlock.end,
+      )
+
+    expect(succeeded).toBe(false)
+    expect(usePomodoroStore.getState().activeTimer).toBeUndefined()
+    expect(usePomodoroStore.getState().error).toContain('此排程已結束')
   })
 
   it('rejects a scheduled focus when a timer is already active', () => {
@@ -110,7 +147,11 @@ describe('pomodoroStore', () => {
 
     const succeeded = usePomodoroStore
       .getState()
-      .startFocusForScheduledBlock(scheduledBlock, 25)
+      .startFocusForScheduledBlock(
+        scheduledBlock,
+        25,
+        '2026-06-21T01:10:00.000Z',
+      )
 
     expect(succeeded).toBe(false)
     expect(usePomodoroStore.getState().activeTimer).toBe(existingTimer)

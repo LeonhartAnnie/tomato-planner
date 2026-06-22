@@ -2,6 +2,11 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { CreateTaskInput } from '../../../application/tasks/createTask'
 import type { Task } from '../../../types'
 import {
+  CUSTOM_TASK_CATEGORY_OPTION,
+  DEFAULT_TASK_CATEGORIES,
+  FALLBACK_TASK_CATEGORY,
+} from '../../../domain/task/taskCategories'
+import {
   fromDateTimeLocalValue,
   toDateTimeLocalValue,
 } from '../../../utils/dateTime'
@@ -11,27 +16,32 @@ interface TaskFormProps {
   isSubmitting: boolean
   onSubmit: (input: CreateTaskInput) => Promise<boolean>
   onCancelEdit: () => void
+  heading?: string
+  headingId?: string
+  defaultEstimatedMinutes?: number
 }
 
 interface TaskFormState {
   title: string
   estimatedMinutes: string
   category: string
+  customCategory: string
   location: string
   note: string
   deadline: string
   splittable: boolean
 }
 
-const emptyForm: TaskFormState = {
+const createEmptyForm = (defaultEstimatedMinutes: number): TaskFormState => ({
   title: '',
-  estimatedMinutes: '25',
-  category: '',
+  estimatedMinutes: defaultEstimatedMinutes.toString(),
+  category: FALLBACK_TASK_CATEGORY,
+  customCategory: '',
   location: '',
   note: '',
   deadline: '',
   splittable: false,
-}
+})
 
 const optionalText = (value: string): string | undefined =>
   value.trim() || undefined
@@ -41,24 +51,39 @@ export function TaskForm({
   isSubmitting,
   onSubmit,
   onCancelEdit,
+  heading,
+  headingId,
+  defaultEstimatedMinutes = 25,
 }: TaskFormProps) {
-  const [form, setForm] = useState<TaskFormState>(emptyForm)
+  const [form, setForm] = useState<TaskFormState>(() =>
+    createEmptyForm(defaultEstimatedMinutes),
+  )
 
   useEffect(() => {
+    const editingCategory = editingTask?.category?.trim()
+    const isDefaultCategory = DEFAULT_TASK_CATEGORIES.some(
+      (category) => category === editingCategory,
+    )
     setForm(
       editingTask
         ? {
             title: editingTask.title,
             estimatedMinutes: editingTask.estimatedMinutes.toString(),
-            category: editingTask.category ?? '',
+            category: isDefaultCategory
+              ? (editingCategory ?? FALLBACK_TASK_CATEGORY)
+              : editingCategory
+                ? CUSTOM_TASK_CATEGORY_OPTION
+                : FALLBACK_TASK_CATEGORY,
+            customCategory:
+              editingCategory && !isDefaultCategory ? editingCategory : '',
             location: editingTask.location ?? '',
             note: editingTask.note ?? '',
             deadline: toDateTimeLocalValue(editingTask.deadline),
             splittable: editingTask.splittable,
           }
-        : emptyForm,
+        : createEmptyForm(defaultEstimatedMinutes),
     )
-  }, [editingTask])
+  }, [defaultEstimatedMinutes, editingTask])
 
   const updateField = <Key extends keyof TaskFormState>(
     key: Key,
@@ -70,7 +95,10 @@ export function TaskForm({
     const succeeded = await onSubmit({
       title: form.title,
       estimatedMinutes: Number(form.estimatedMinutes),
-      category: optionalText(form.category),
+      category:
+        form.category === CUSTOM_TASK_CATEGORY_OPTION
+          ? optionalText(form.customCategory) ?? FALLBACK_TASK_CATEGORY
+          : form.category,
       location: optionalText(form.location),
       note: optionalText(form.note),
       deadline: fromDateTimeLocalValue(form.deadline),
@@ -78,13 +106,15 @@ export function TaskForm({
     })
 
     if (succeeded) {
-      setForm(emptyForm)
+      setForm(createEmptyForm(defaultEstimatedMinutes))
     }
   }
 
   return (
     <form className="task-form" onSubmit={(event) => void handleSubmit(event)}>
-      <h2>{editingTask ? '編輯任務' : '新增任務'}</h2>
+      <h2 id={headingId}>
+        {heading ?? (editingTask ? '編輯任務' : '新增任務')}
+      </h2>
 
       <label>
         標題
@@ -109,12 +139,34 @@ export function TaskForm({
       </label>
 
       <label>
-        分類（選填）
-        <input
+        分類
+        <select
           value={form.category}
           onChange={(event) => updateField('category', event.target.value)}
-        />
+        >
+          {DEFAULT_TASK_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+          <option value={CUSTOM_TASK_CATEGORY_OPTION}>
+            {CUSTOM_TASK_CATEGORY_OPTION}
+          </option>
+        </select>
       </label>
+
+      {form.category === CUSTOM_TASK_CATEGORY_OPTION && (
+        <label>
+          自訂分類
+          <input
+            value={form.customCategory}
+            onChange={(event) =>
+              updateField('customCategory', event.target.value)
+            }
+            placeholder="例如：個人專案"
+          />
+        </label>
+      )}
 
       <label>
         地點（選填）
@@ -140,15 +192,6 @@ export function TaskForm({
           value={form.deadline}
           onChange={(event) => updateField('deadline', event.target.value)}
         />
-      </label>
-
-      <label className="checkbox-field">
-        <input
-          type="checkbox"
-          checked={form.splittable}
-          onChange={(event) => updateField('splittable', event.target.checked)}
-        />
-        可拆分任務
       </label>
 
       <div className="form-actions full-width">

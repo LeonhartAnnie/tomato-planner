@@ -3,6 +3,7 @@ import type { CreateTaskInput } from '../application/tasks/createTask'
 import { TaskForm } from '../features/tasks/components/TaskForm'
 import { TaskList } from '../features/tasks/components/TaskList'
 import { useTaskStore } from '../stores/taskStore'
+import { useSettingsStore } from '../stores/settingsStore'
 import type { Task } from '../types'
 
 export function TasksPage() {
@@ -14,10 +15,18 @@ export function TasksPage() {
   const updateTask = useTaskStore((state) => state.updateTask)
   const deleteTask = useTaskStore((state) => state.deleteTask)
   const [editingTask, setEditingTask] = useState<Task>()
+  const defaultEstimatedMinutes = useSettingsStore(
+    (state) => state.settings.defaultTaskDurationMinutes,
+  )
+  const settingsLoading = useSettingsStore((state) => state.isLoading)
+  const settingsError = useSettingsStore((state) => state.error)
+  const loadSettings = useSettingsStore((state) => state.loadSettings)
+  const isBusy = isLoading || settingsLoading
 
   useEffect(() => {
     void loadTasks()
-  }, [loadTasks])
+    void loadSettings()
+  }, [loadSettings, loadTasks])
 
   const handleSubmit = async (input: CreateTaskInput): Promise<boolean> => {
     if (!editingTask) {
@@ -45,19 +54,20 @@ export function TasksPage() {
   return (
     <section>
       <h1>任務</h1>
-      {error && <p className="error-message" role="alert">{error}</p>}
-      {isLoading && <p role="status">處理中…</p>}
+      {(error || settingsError) && <p className="error-message" role="alert">{error ?? settingsError}</p>}
+      {isBusy && <p role="status">處理中…</p>}
 
       <div className="tasks-layout">
         <TaskForm
           editingTask={editingTask}
-          isSubmitting={isLoading}
+          isSubmitting={isBusy}
+          defaultEstimatedMinutes={defaultEstimatedMinutes}
           onSubmit={handleSubmit}
           onCancelEdit={() => setEditingTask(undefined)}
         />
         <TaskList
           tasks={tasks}
-          isBusy={isLoading}
+          isBusy={isBusy}
           onEdit={setEditingTask}
           onDelete={(id) => void handleDelete(id)}
         />

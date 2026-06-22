@@ -1,5 +1,6 @@
 import type { Task } from '../../../types'
 import { formatDateTime } from '../../../utils/dateTime'
+import { getTaskCategoryPresentation } from '../selectors/taskCategoryPresentation'
 
 interface TaskListItemProps {
   task: Task
@@ -14,21 +15,20 @@ export function TaskListItem({
   onEdit,
   onDelete,
 }: TaskListItemProps) {
+  const category = getTaskCategoryPresentation(task.category)
+
   return (
     <li className="task-item">
       <div>
         <h3>{task.title}</h3>
+        <span className={`task-category-badge ${category.cssClassName}`}>
+          {category.label}
+        </span>
         <dl className="task-details">
           <div>
             <dt>預估</dt>
             <dd>{task.estimatedMinutes} 分鐘</dd>
           </div>
-          {task.category && (
-            <div>
-              <dt>分類</dt>
-              <dd>{task.category}</dd>
-            </div>
-          )}
           {task.location && (
             <div>
               <dt>地點</dt>
@@ -41,10 +41,6 @@ export function TaskListItem({
               <dd>{formatDateTime(task.deadline)}</dd>
             </div>
           )}
-          <div>
-            <dt>可拆分</dt>
-            <dd>{task.splittable ? '是' : '否'}</dd>
-          </div>
         </dl>
       </div>
 

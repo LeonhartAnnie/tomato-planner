@@ -32,6 +32,7 @@ interface PomodoroState {
   startFocusForScheduledBlock: (
     block: ScheduledBlock,
     durationMinutes: number,
+    startedAt?: string,
   ) => boolean
   pauseTimer: (now?: string) => void
   resumeTimer: (now?: string) => void
@@ -73,7 +74,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
     }
   },
 
-  startFocusForScheduledBlock: (block, durationMinutes) => {
+  startFocusForScheduledBlock: (block, durationMinutes, startedAt) => {
     const activeTimer = get().activeTimer
     if (
       activeTimer?.status === 'running' ||
@@ -85,7 +86,11 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
     try {
       set({
-        activeTimer: startPomodoroForScheduledBlock(block, durationMinutes),
+        activeTimer: startPomodoroForScheduledBlock(
+          block,
+          durationMinutes,
+          startedAt,
+        ),
         nextStep: undefined,
         error: null,
       })

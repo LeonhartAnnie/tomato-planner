@@ -8,6 +8,7 @@ interface ScheduleDisplayItemProps {
   isBusy: boolean
   onDelete: (id: string) => void
   isDraggable?: boolean
+  category?: string
 }
 
 function ConflictNotice({ item }: { item: ScheduleDisplayItemModel }) {
@@ -33,6 +34,7 @@ export function ScheduleDisplayItem({
   isBusy,
   onDelete,
   isDraggable = false,
+  category,
 }: ScheduleDisplayItemProps) {
   if (item.kind === 'scheduled_block') {
     return (
@@ -47,6 +49,7 @@ export function ScheduleDisplayItem({
             <DraggableScheduledBlock block={item.block} disabled={isBusy} />
           ) : undefined
         }
+        category={category}
       />
     )
   }

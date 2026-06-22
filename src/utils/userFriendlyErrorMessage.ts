@@ -69,6 +69,9 @@ export const toUserFriendlyErrorMessage = (
   }
 
   const domainMessages: Array<[string, string]> = [
+    ['此排程尚未開始', '此排程尚未開始，請等到排程時間內再開始專注。'],
+    ['此排程已結束', '此排程已結束，無法開始專注。'],
+    ['此排程時間無效', '此排程時間無效，無法開始專注。'],
     ['task title is required', '請輸入任務名稱。'],
     ['estimated minutes must be', '預估時間必須是大於 0 的有效數字。'],
     ['end time must be after start time', '結束時間必須晚於開始時間。'],

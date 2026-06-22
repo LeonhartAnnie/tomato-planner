@@ -1,4 +1,5 @@
-import type { CalendarEvent, ScheduledBlock } from '../../../types'
+import type { CalendarEvent, ScheduledBlock, Task } from '../../../types'
+import { getScheduledBlockCategoryPresentation } from '../../tasks/selectors/taskCategoryPresentation'
 import {
   getNextSevenDays,
   groupScheduleItemsByDate,
@@ -10,6 +11,7 @@ interface ScheduleWeekViewProps {
   calendarEvents: CalendarEvent[]
   isBusy: boolean
   onDelete: (id: string) => void
+  tasks: Task[]
 }
 
 export function ScheduleWeekView({
@@ -17,6 +19,7 @@ export function ScheduleWeekView({
   calendarEvents,
   isBusy,
   onDelete,
+  tasks,
 }: ScheduleWeekViewProps) {
   const dateKeys = getNextSevenDays()
   const dayGroups = groupScheduleItemsByDate(blocks, calendarEvents, dateKeys)
@@ -40,6 +43,14 @@ export function ScheduleWeekView({
                     item={item}
                     isBusy={isBusy}
                     onDelete={onDelete}
+                    category={
+                      item.kind === 'scheduled_block'
+                        ? getScheduledBlockCategoryPresentation(
+                            item.block,
+                            tasks,
+                          ).label
+                        : undefined
+                    }
                   />
                 ))}
               </ul>

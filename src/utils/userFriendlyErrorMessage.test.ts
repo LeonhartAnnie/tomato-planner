@@ -77,4 +77,12 @@ describe('toUserFriendlyErrorMessage', () => {
     expect(toUserFriendlyErrorMessage(new Error('Task title is required')))
       .toBe('請輸入任務名稱。')
   })
+
+  it.each([
+    ['此排程尚未開始，請等到排程時間內再開始專注。', '此排程尚未開始'],
+    ['此排程已結束，無法開始專注。', '此排程已結束'],
+    ['此排程時間無效，無法開始專注。', '此排程時間無效'],
+  ])('keeps scheduled focus availability errors actionable', (expected, raw) => {
+    expect(toUserFriendlyErrorMessage(new Error(raw))).toBe(expected)
+  })
 })

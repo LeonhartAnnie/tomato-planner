@@ -2,6 +2,7 @@ import {
   validateEstimatedMinutes,
   validateTaskTitle,
 } from '../../domain/task/taskRules'
+import { normalizeTaskCategory } from '../../domain/task/taskCategories'
 import type { Task } from '../../types'
 import { nowIso } from '../../utils/dateTime'
 import { createId } from '../../utils/id'
@@ -27,6 +28,7 @@ export const createTask = async (
   const timestamp = nowIso()
   const task: Task = {
     ...input,
+    category: normalizeTaskCategory(input.category),
     id: createId('task'),
     splittable: input.splittable ?? false,
     createdAt: timestamp,

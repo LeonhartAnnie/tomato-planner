@@ -70,10 +70,10 @@ export function DashboardPage() {
       />
 
       <nav className="dashboard-quick-links" aria-label="快速操作">
-        <Link to="/tasks">管理任務</Link>
-        <Link to="/schedule">查看排程</Link>
-        <Link to="/pomodoro">開始專注</Link>
-        <Link to="/settings">調整設定</Link>
+        <Link to="/tasks" draggable={false}>管理任務</Link>
+        <Link to="/schedule" draggable={false}>查看排程</Link>
+        <Link to="/pomodoro" draggable={false}>開始專注</Link>
+        <Link to="/settings" draggable={false}>調整設定</Link>
       </nav>
     </section>
   )

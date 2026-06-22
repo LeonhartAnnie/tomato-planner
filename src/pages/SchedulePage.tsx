@@ -1,21 +1,33 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import type { CreateScheduledBlockInput } from '../application/schedule/createScheduledBlock'
-import { ScheduleBlockForm } from '../features/schedule/components/ScheduleBlockForm'
 import { GoogleCalendarPanel } from '../features/schedule/components/GoogleCalendarPanel'
 import { ScheduleDragPlanner } from '../features/schedule/components/ScheduleDragPlanner'
-import { ScheduleWeekView } from '../features/schedule/components/ScheduleWeekView'
 import { createSampleCalendarEvents } from '../features/schedule/sampleCalendarEvents'
 import { useScheduleStore } from '../stores/scheduleStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { usePomodoroStore } from '../stores/pomodoroStore'
 import { useTaskStore } from '../stores/taskStore'
+import {
+  createScheduleViewRange,
+  shiftScheduleViewRange,
+  type ScheduleViewRangeMode,
+} from '../features/schedule/selectors/scheduleViewRange'
+import {
+  readScheduleViewRangeMode,
+  writeScheduleViewRangeMode,
+} from '../features/schedule/selectors/scheduleViewRangeStorage'
+import { nowIso } from '../utils/dateTime'
 
 export function SchedulePage() {
+  const [baseDateIso] = useState(nowIso)
+  const [viewRange, setViewRange] = useState(() =>
+    createScheduleViewRange(readScheduleViewRangeMode(), undefined, baseDateIso),
+  )
   const tasks = useTaskStore((state) => state.tasks)
   const tasksLoading = useTaskStore((state) => state.isLoading)
   const taskError = useTaskStore((state) => state.error)
   const loadTasks = useTaskStore((state) => state.loadTasks)
+  const addTask = useTaskStore((state) => state.addTask)
   const blocks = useScheduleStore((state) => state.blocks)
   const calendarEvents = useScheduleStore((state) => state.calendarEvents)
   const scheduleLoading = useScheduleStore((state) => state.isLoading)
@@ -41,14 +53,17 @@ export function SchedulePage() {
   }, [loadSchedule, loadSettings, loadTasks])
 
   const handleAdd = (input: CreateScheduledBlockInput) => addBlock(input)
+  const handleViewModeChange = (mode: ScheduleViewRangeMode) => {
+    writeScheduleViewRangeMode(mode)
+    setViewRange((current) =>
+      createScheduleViewRange(mode, current.anchorDateKey, baseDateIso),
+    )
+  }
 
   return (
     <section className="schedule-page">
       <header className="schedule-page-heading">
-        <div>
-          <h1>排程</h1>
-          <p>以時間格線安排主要工作，其他建立與整合工具可從下方展開。</p>
-        </div>
+        <h1>排程</h1>
       </header>
       {(taskError || scheduleError || settingsError || pomodoroError) && (
         <p className="error-message">
@@ -56,11 +71,6 @@ export function SchedulePage() {
         </p>
       )}
       {isLoading && <p role="status">處理中…</p>}
-      {tasks.length === 0 && !tasksLoading && (
-        <p>
-          尚無可排程任務，請先前往 <Link to="/tasks">任務頁面</Link> 建立任務。
-        </p>
-      )}
       <ScheduleDragPlanner
         tasks={tasks}
         blocks={blocks}
@@ -73,59 +83,40 @@ export function SchedulePage() {
         onAdd={handleAdd}
         onUpdate={updateBlock}
         onDelete={(id) => void deleteBlock(id)}
+        onAddTask={addTask}
+        taskError={taskError}
+        viewRange={viewRange}
+        onViewModeChange={handleViewModeChange}
+        onViewPrevious={() =>
+          setViewRange((current) =>
+            shiftScheduleViewRange(current, -1, baseDateIso),
+          )
+        }
+        onViewNext={() =>
+          setViewRange((current) =>
+            shiftScheduleViewRange(current, 1, baseDateIso),
+          )
+        }
       />
 
-      <div className="schedule-tools-heading">
-        <h2>其他排程工具</h2>
-        <p>手動建立、清單檢視與 Google Calendar 整合維持為次要工具。</p>
-      </div>
-      <div className="schedule-secondary-sections">
-        <details className="schedule-section">
-          <summary>手動建立排程</summary>
-          <div className="schedule-section-content">
-            <ScheduleBlockForm
-              tasks={tasks}
-              isSubmitting={isLoading}
-              onSubmit={handleAdd}
-            />
+      <section className="schedule-calendar-section" aria-label="Google Calendar 整合">
+        <GoogleCalendarPanel />
+        {import.meta.env.DEV && (
+          <div className="development-calendar-actions">
+            <button
+              type="button"
+              className="sample-events-button"
+              disabled={scheduleLoading}
+              onClick={() =>
+                void setCalendarEvents(createSampleCalendarEvents(blocks[0]))
+              }
+            >
+              開發測試：載入範例外部行程
+            </button>
           </div>
-        </details>
+        )}
+      </section>
 
-        <details className="schedule-section">
-          <summary>週排程清單</summary>
-          <div className="schedule-section-content">
-            <ScheduleWeekView
-              blocks={blocks}
-              calendarEvents={calendarEvents}
-              isBusy={isLoading}
-              onDelete={(id) => void deleteBlock(id)}
-            />
-          </div>
-        </details>
-
-        <details className="schedule-section">
-          <summary>Google Calendar</summary>
-          <div className="schedule-section-content">
-            <GoogleCalendarPanel />
-            {import.meta.env.DEV && (
-              <div className="development-calendar-actions">
-                <button
-                  type="button"
-                  className="sample-events-button"
-                  disabled={scheduleLoading}
-                  onClick={() =>
-                    void setCalendarEvents(
-                      createSampleCalendarEvents(blocks[0]),
-                    )
-                  }
-                >
-                  開發測試：載入範例外部行程
-                </button>
-              </div>
-            )}
-          </div>
-        </details>
-      </div>
     </section>
   )
 }

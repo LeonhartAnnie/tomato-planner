@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { ScheduledBlock } from '../../types'
-import { startPomodoroForScheduledBlock } from './startPomodoroForScheduledBlock'
+import {
+  getScheduledBlockFocusDurationMinutes,
+  startPomodoroForScheduledBlock,
+} from './startPomodoroForScheduledBlock'
 
 const block: ScheduledBlock = {
   id: 'block-1',
@@ -26,7 +29,7 @@ describe('startPomodoroForScheduledBlock', () => {
       taskId: block.taskId,
       scheduledBlockId: block.id,
       type: 'focus',
-      durationMinutes: 25,
+      durationMinutes: 60,
       status: 'running',
     })
   })
@@ -52,8 +55,29 @@ describe('startPomodoroForScheduledBlock', () => {
     ).toBe('focus')
   })
 
-  it('rejects a non-positive duration', () => {
-    expect(() => startPomodoroForScheduledBlock(block, 0)).toThrow()
+  it('uses the scheduled block duration instead of the fallback duration', () => {
+    const twentyFiveMinuteBlock = {
+      ...block,
+      end: '2026-06-21T01:25:00.000Z',
+    }
+
+    const timer = startPomodoroForScheduledBlock(
+      twentyFiveMinuteBlock,
+      30,
+      '2026-06-21T01:00:00.000Z',
+    )
+
+    expect(timer.durationMinutes).toBe(25)
+    expect(timer.targetEndAt).toBe('2026-06-21T01:25:00.000Z')
+  })
+
+  it('calculates the fallback duration for an invalid block duration', () => {
+    expect(
+      getScheduledBlockFocusDurationMinutes(
+        { ...block, end: block.start },
+        30,
+      ),
+    ).toBe(30)
   })
 
   it('calculates targetEndAt', () => {
@@ -63,6 +87,36 @@ describe('startPomodoroForScheduledBlock', () => {
         25,
         '2026-06-21T01:00:00.000Z',
       ).targetEndAt,
-    ).toBe('2026-06-21T01:25:00.000Z')
+    ).toBe('2026-06-21T02:00:00.000Z')
+  })
+
+  it('rejects a block that has not started', () => {
+    expect(() =>
+      startPomodoroForScheduledBlock(
+        block,
+        30,
+        '2026-06-21T00:59:59.000Z',
+      ),
+    ).toThrow('此排程尚未開始')
+  })
+
+  it('rejects a block that has ended', () => {
+    expect(() =>
+      startPomodoroForScheduledBlock(
+        block,
+        30,
+        '2026-06-21T02:00:00.000Z',
+      ),
+    ).toThrow('此排程已結束')
+  })
+
+  it('rejects an invalid block time', () => {
+    expect(() =>
+      startPomodoroForScheduledBlock(
+        { ...block, end: block.start },
+        30,
+        block.start,
+      ),
+    ).toThrow('此排程時間無效')
   })
 })

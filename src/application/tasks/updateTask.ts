@@ -2,6 +2,7 @@ import {
   validateEstimatedMinutes,
   validateTaskTitle,
 } from '../../domain/task/taskRules'
+import { normalizeTaskCategory } from '../../domain/task/taskCategories'
 import type { Task } from '../../types'
 import { nowIso } from '../../utils/dateTime'
 import type { TaskRepository } from './taskRepository'
@@ -15,6 +16,7 @@ export const updateTask = async (
 
   const updatedTask: Task = {
     ...task,
+    category: normalizeTaskCategory(task.category),
     updatedAt: nowIso(),
   }
 

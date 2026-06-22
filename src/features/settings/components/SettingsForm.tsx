@@ -14,14 +14,22 @@ interface SettingsFormProps {
   onReset: () => Promise<boolean>
 }
 
-const fields: Array<{ key: keyof SettingsFormValues; label: string }> = [
+const fields: Array<{
+  key: keyof SettingsFormValues
+  label: string
+  description?: string
+}> = [
   { key: 'workMinutes', label: '專注分鐘' },
   { key: 'shortBreakMinutes', label: '短休息分鐘' },
   { key: 'longBreakMinutes', label: '長休息分鐘' },
   { key: 'longBreakInterval', label: '長休息間隔' },
   { key: 'calendarViewStartHour', label: '日曆開始小時' },
   { key: 'calendarViewEndHour', label: '日曆結束小時' },
-  { key: 'defaultTaskDurationMinutes', label: '預設任務分鐘' },
+  {
+    key: 'defaultTaskDurationMinutes',
+    label: '新增任務預設分鐘',
+    description: '建立新任務時自動帶入的預估時間，可在任務表單中修改。',
+  },
 ]
 
 export function SettingsForm({
@@ -59,7 +67,7 @@ export function SettingsForm({
       className="settings-form"
       onSubmit={(event) => void handleSave(event)}
     >
-      {fields.map(({ key, label }) => (
+      {fields.map(({ key, label, description }) => (
         <label key={key}>
           {label}
           <input
@@ -67,6 +75,7 @@ export function SettingsForm({
             value={values[key]}
             onChange={(event) => updateField(key, event.target.value)}
           />
+          {description && <small className="settings-field-help">{description}</small>}
         </label>
       ))}
 

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 const links = [
   { to: '/', label: '首頁' },
@@ -24,6 +24,10 @@ export function AppLayout() {
       <main>
         <Outlet />
       </main>
+      <footer className="app-footer">
+        <Link to="/privacy">Privacy Policy</Link>
+        <Link to="/terms">Terms of Service</Link>
+      </footer>
     </div>
   )
 }
